@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# network-project
-=======
 # NETWORK PROJECT
 
 | Domande del progetto |
@@ -14,4 +11,4 @@
     - Creare poster
 
 **Scadenza: 17 luglio**
->>>>>>> Initial commit,
+

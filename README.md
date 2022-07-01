@@ -28,8 +28,6 @@
     - Analisi vera e propria
     - Creare presentazione 
     - Creare poster
-    - Preparare discorso
-    
 
 **Scadenza: 17 luglio**
 

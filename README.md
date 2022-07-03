@@ -4,16 +4,16 @@
 
 ## TODO:
 - Inserire le domande sulle quali si basa il progetto
-- Scegliere dataset: fatto
+- Scegliere dataset: ✓
 
 
 - Pulizia dataset
   - Data -> solo anno
   - Time -> controllare distribuzione: se significativa gestire i null sennó togliamo la colonna
   - Location -> se c'é la virgola tenere quello che c'é dopo sennó tenere tutto. Capire come gestire URSS e Russia
-  - <font color="red">Operator</font> -> Raggruppare per: militare, civile, forse terza per poste ecc..
+  - <font color="red">Operator</font> -> Raggruppare per: militare, civile, forse terza per poste ecc.. **Raggruppamento militare fatto**
   - Flight -> ELIMINARE
-  - <font color="red">Route</font> -> splittare aeroporto partenza e arrivo, attenzione rotte multiple, attenzione *"test flight"*, trovare coordinate
+  - <font color="red">Route</font> -> splittare aeroporto partenza e arrivo, attenzione rotte multiple, attenzione *"test flight"*, trovare coordinate **SPLIT ROTTE FATTO**
   - <font color="red">AC type</font> -> raggruppamento e attenzione ai similari
   - Registration -> ELIMINARE
   - cn/ln -> ELIMINARE

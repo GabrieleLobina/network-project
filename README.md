@@ -8,7 +8,7 @@
 
 
 - Pulizia dataset
-  - Data -> solo anno
+  - Data -> solo anno --> FATTO AL 100%
   - Time -> controllare distribuzione: se significativa gestire i null sennó togliamo la colonna
   - Location -> se c'é la virgola tenere quello che c'é dopo sennó tenere tutto. Capire come gestire URSS e Russia
   - <font color="red">Operator</font> -> Raggruppare per: militare, civile, forse terza per poste ecc.. **Raggruppamento militare fatto**

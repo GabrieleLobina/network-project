@@ -14,7 +14,7 @@
   - <font color="red">Operator</font> -> Raggruppare per: militare, civile, forse terza per poste ecc.. **Raggruppamento militare fatto**
   - Flight -> ELIMINARE
   - <font color="red">Route</font> -> splittare aeroporto partenza e arrivo, attenzione rotte multiple, attenzione *"test flight"*, trovare coordinate **SPLIT ROTTE FATTO**
-  - <font color="red">AC type</font> -> raggruppamento e attenzione ai similari
+  - <font color="red">AC type</font> -> raggruppamento e attenzione ai similari **FATTO AL 80%**
   - Registration -> ELIMINARE
   - cn/ln -> ELIMINARE
   - <font color="red">Aboard</font> -> gestire nulli 
@@ -23,8 +23,8 @@
   - <font color="red">Fatalities</font> -> gestire nulli 
   - <font color="red">Fatalities crew</font> -> gestire nulli 
   - <font color="red">Fatalities passengers</font> -> gestire nulli 
-  - <font color="red">Ground</font> -> da capire cosa significa
-  - <font color="red">Summary</font> -> gestire
+  - <font color="red">Ground</font> -> da capire cosa significa ✓ = numero morti a terra dovuto allo schianto su persone
+  - <font color="red">Summary</font> -> gestire = proposta paxxa: mini *topic moddeling*?
 
 
 - Analisi vera e propria
@@ -35,3 +35,11 @@
 
 **Scadenza: 17 luglio**
 
+
+
+### <font color="yellow">TODO (GABRO):</font>
+
+- Identificare altre macro-categorie di Operatori e fare il raggruppamento (tipo ci sono quelli delle poste)
+- Cercare di aggiungere le coordinate delle rotte / capire se sono necessarie per inserire il grafo in una mappa
+- Sistemare il problema dei valori non upper dovuti agli Na su AC Type e decidere se ridurre ancora di più i valori univoci
+ 

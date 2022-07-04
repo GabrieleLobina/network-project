@@ -29,7 +29,7 @@
 
 - Analisi vera e propria
 - Creare presentazione 
-- Creare poster
+  - Creare poster
 
 
 

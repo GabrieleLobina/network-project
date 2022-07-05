@@ -17,10 +17,10 @@
   - <font color="red">AC type</font> -> raggruppamento e attenzione ai similari **FATTO AL 80%**
   - Registration -> ELIMINARE
   - cn/ln -> ELIMINARE
-  - <font color="red">Aboard</font> -> gestire nulli 
+  - <font color="red">Aboard</font> -> gestire nulli : **ELIMINARLI**
   - <font color="red">Aboard crew</font> -> gestire nulli 
   - <font color="red">Aboard passengers</font> -> gestire nulli 
-  - <font color="red">Fatalities</font> -> gestire nulli 
+  - <font color="red">Fatalities</font> -> gestire nulli : **ELIMINARLI**
   - <font color="red">Fatalities crew</font> -> gestire nulli 
   - <font color="red">Fatalities passengers</font> -> gestire nulli 
   - <font color="red">Ground</font> -> da capire cosa significa ✓ = numero morti a terra dovuto allo schianto su persone

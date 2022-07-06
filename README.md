@@ -11,10 +11,10 @@
   - Data -> solo anno --> FATTO AL 100%
   - Time -> controllare distribuzione: se significativa gestire i null sennó togliamo la colonna --> fatto 80% manca ridistribuirli nelle var mancanti
   - Location -> se c'é la virgola tenere quello che c'é dopo sennó tenere tutto. Capire come gestire URSS e Russia
-  - <font color="red">Operator</font> -> Raggruppare per: militare, civile, forse terza per poste ecc.. **Raggruppamento militare fatto**
+  - <font color="red">Operator</font> -> Raggruppare per: militare, civile, forse terza per poste ecc.. ✓
   - Flight -> ELIMINARE
-  - <font color="red">Route</font> -> splittare aeroporto partenza e arrivo, attenzione rotte multiple, attenzione *"test flight"*, trovare coordinate **SPLIT ROTTE FATTO**
-  - <font color="red">AC type</font> -> raggruppamento e attenzione ai similari **FATTO AL 80%**
+  - <font color="red">Route</font> -> splittare aeroporto partenza e arrivo, attenzione rotte multiple, attenzione *"test flight"*, trovare coordinate ✓
+  - <font color="red">AC type</font> -> raggruppamento e attenzione ai similari ✓
   - Registration -> ELIMINARE
   - cn/ln -> ELIMINARE
   - <font color="red">Aboard</font> -> gestire nulli : **ELIMINARLI**

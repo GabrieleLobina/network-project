@@ -675,3 +675,135 @@ plt.title("Histogram")
 plt.show()
 #%%
 #dataset=dataset.assign(Hour=new_ore)
+##### Si è scelto di non utilizzare la colonna Time in quanto poco significativa come distribuzione e poiché presenta un 30% circa di nan
+# Analisi variabili fatalities, crew and passengers e ripartizione fatalities
+dataset.keys()
+#### Commenta sti cazzo di print
+print(np.max(dataset.Fatalities), np.min(dataset.Fatalities), np.mean(dataset.Fatalities),
+      np.median(dataset.Fatalities), np.nanmedian(dataset.Fatalities))
+print(np.max(dataset["Ground"]), np.max(dataset["Fatalities"]), np.max(dataset["Fatalities Passangers"]),
+      np.max(dataset["Fatalities Crew"]))
+print(dataset.shape)
+dataset = dataset[dataset["Fatalities"].notna()]
+dataset = dataset[dataset["Fatalities Crew"].notna()]
+dataset = dataset[dataset["Fatalities Passangers"].notna()]
+dataset = dataset[dataset["Ground"].notna()]
+print(dataset.shape)
+new_fat = []
+new_pass = []
+new_ground = []
+new_crew = []
+for position, i in enumerate(dataset[
+                                 "Fatalities"]):  ##try and except per gestione na presenti nel dataset originali, tenuti per scelta stilistica e non per motivi computazionali
+    try:
+        total_death = (dataset["Fatalities Crew"].iloc[position] + dataset["Fatalities Passangers"].iloc[position] +
+                       dataset["Ground"].iloc[position])
+        diff_death = i - total_death
+        if i == total_death:
+            new_fat.append(i)
+            new_crew.append(dataset["Fatalities Crew"].iloc[position])
+            new_pass.append(dataset["Fatalities Passangers"].iloc[position])
+            new_ground.append(dataset["Ground"].iloc[position])
+        elif i > total_death:
+            new_fat.append(i)
+            new_crew.append(dataset["Fatalities Crew"].iloc[position])
+            new_pass.append(dataset["Fatalities Passangers"].iloc[position])
+            new_ground.append(dataset["Ground"].iloc[position])
+        elif i < total_death:
+            i = total_death
+            new_fat.append(i)
+            new_crew.append(dataset["Fatalities Crew"].iloc[position])
+            new_pass.append(dataset["Fatalities Passangers"].iloc[position])
+            new_ground.append(dataset["Ground"].iloc[position])
+    except:
+        new_fat.append(i)
+        new_crew.append(dataset["Fatalities Crew"].iloc[position])
+        new_pass.append(dataset["Fatalities Passangers"].iloc[position])
+        new_ground.append(dataset["Ground"].iloc[position])
+print(len(new_fat), "new fat")
+print(len(new_ground), "new gr")
+print(len(new_pass), "new pass")
+print(len(new_crew), "new crew")
+dataset.shape
+dataset = dataset.assign(new_fat=new_fat, new_crew=new_crew, new_pass=new_pass, new_ground=new_ground)
+dataset
+print(dataset.shape)
+dataset = dataset[dataset["Aboard"].notna()]
+dataset = dataset[dataset["Aboard Passangers"].notna()]
+dataset = dataset[dataset["Aboard Crew"].notna()]
+print(dataset.shape)
+new_aboard = []
+new_aboard_pass = []
+new_aboard_crew = []
+for position, i in enumerate(dataset.Aboard):
+    try:
+        total_ab = (dataset["Aboard Passangers"].iloc[position] + dataset["Aboard Crew"].iloc[position])
+        if i == total_ab:
+            print("tutto ok", i, dataset["Aboard Crew"].iloc[position], dataset["Aboard Passangers"].iloc[position])
+            new_aboard.append(i)
+            new_aboard_crew.append(dataset["Aboard Crew"].iloc[position])
+            new_aboard_pass.append(dataset["Aboard Passangers"].iloc[position])
+        else:
+            print("nada ok", i, dataset["Aboard Crew"].iloc[position], dataset["Aboard Passangers"].iloc[position])
+            i = total_ab
+            new_aboard.append(i)
+            new_aboard_crew.append(dataset["Aboard Crew"].iloc[position])
+            new_aboard_pass.append(dataset["Aboard Passangers"].iloc[position])
+    except:
+        print("mannaggia")
+
+print(dataset["Aboard"], new_aboard)
+coo = 0
+dataset = dataset[dataset["Fatalities"].notna()]
+for position, i in enumerate(dataset.Fatalities):
+    #if type(i) != float:
+    if i == 0.0:
+        print("fata", "fata crew", "fata pass")
+        print(i, dataset["Fatalities Crew"].iloc[position], dataset["Fatalities Passangers"].iloc[position])
+        coo = coo + 1
+
+print(coo)
+coo = 0
+dataset = dataset[dataset["Fatalities"].notna()]
+for position, i in enumerate(dataset.Fatalities):
+    coo = coo + 1
+    #if type(i) != float:
+    nenna = (dataset["Fatalities Crew"].iloc[position] + dataset["Fatalities Passangers"].iloc[position])
+    if i < nenna:
+        print("mannaggia", i, nenna)
+    #if i == 0.0:
+    #   print("fata","fata crew","fata pass")
+    #  print(i,dataset["Fatalities Crew"].iloc[position] ,dataset["Fatalities Passangers"].iloc[position])
+    #coo = coo + 1
+
+print(coo)
+
+
+def na_counter_for_numeric_column(column, nome_colonna):
+    nas = []
+    for value in column:
+        try:
+            int(value)
+        except:
+            nas.append(value)
+    return print(f"Numero di Na della colonna {nome_colonna}: {len(nas)}")
+
+
+na_counter_for_numeric_column(dataset["Aboard"], "Aboard")
+na_counter_for_numeric_column(dataset["Aboard Crew"], "Aboard Crew")
+na_counter_for_numeric_column(dataset["Aboard Passangers"], "Aboard Passangers")
+na_counter_for_numeric_column(dataset["Fatalities"], "Fatalities")
+na_counter_for_numeric_column(dataset["Fatalities Crew"], "Fatalities Crew")
+na_counter_for_numeric_column(dataset["Fatalities Passangers"], "Fatalities Passangers")
+na_counter_for_numeric_column(dataset["Ground"], "Ground")
+
+print(dataset.shape)
+dataset = dataset[dataset["Fatalities"].notna()]
+dataset = dataset[dataset["Fatalities Crew"].notna()]
+dataset = dataset[dataset["Fatalities Passangers"].notna()]
+dataset = dataset[dataset["Ground"].notna()]
+print(dataset.shape)
+print(np.mean(dataset("")))
+dataset = dataset["Ground"].dropna
+dataset.keys()
+dataset = dataset.assign(new_fat=new_fat, new_crew=new_crew)

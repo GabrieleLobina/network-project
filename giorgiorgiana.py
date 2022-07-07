@@ -1,3 +1,4 @@
+#%%
 import pandas as pd
 import re
 import matplotlib as mlt
@@ -675,10 +676,19 @@ plt.title("Histogram")
 plt.show()
 #%%
 #dataset=dataset.assign(Hour=new_ore)
+#%% md
+
+#%% md
 ##### Si è scelto di non utilizzare la colonna Time in quanto poco significativa come distribuzione e poiché presenta un 30% circa di nan
+#%% md
 # Analisi variabili fatalities, crew and passengers e ripartizione fatalities
-dataset.keys()
+
+#%% md
 #### Commenta sti cazzo di print
+
+#%%
+dataset.keys()
+#%%
 print(np.max(dataset.Fatalities), np.min(dataset.Fatalities), np.mean(dataset.Fatalities),
       np.median(dataset.Fatalities), np.nanmedian(dataset.Fatalities))
 print(np.max(dataset["Ground"]), np.max(dataset["Fatalities"]), np.max(dataset["Fatalities Passangers"]),
@@ -689,6 +699,7 @@ dataset = dataset[dataset["Fatalities Crew"].notna()]
 dataset = dataset[dataset["Fatalities Passangers"].notna()]
 dataset = dataset[dataset["Ground"].notna()]
 print(dataset.shape)
+#%%
 new_fat = []
 new_pass = []
 new_ground = []
@@ -724,14 +735,18 @@ print(len(new_fat), "new fat")
 print(len(new_ground), "new gr")
 print(len(new_pass), "new pass")
 print(len(new_crew), "new crew")
+#%%
 dataset.shape
 dataset = dataset.assign(new_fat=new_fat, new_crew=new_crew, new_pass=new_pass, new_ground=new_ground)
 dataset
+print(dataset.shape)
+#%%
 print(dataset.shape)
 dataset = dataset[dataset["Aboard"].notna()]
 dataset = dataset[dataset["Aboard Passangers"].notna()]
 dataset = dataset[dataset["Aboard Crew"].notna()]
 print(dataset.shape)
+#%%
 new_aboard = []
 new_aboard_pass = []
 new_aboard_crew = []
@@ -751,7 +766,7 @@ for position, i in enumerate(dataset.Aboard):
             new_aboard_pass.append(dataset["Aboard Passangers"].iloc[position])
     except:
         print("mannaggia")
-
+#%%
 print(dataset["Aboard"], new_aboard)
 coo = 0
 dataset = dataset[dataset["Fatalities"].notna()]
@@ -761,24 +776,8 @@ for position, i in enumerate(dataset.Fatalities):
         print("fata", "fata crew", "fata pass")
         print(i, dataset["Fatalities Crew"].iloc[position], dataset["Fatalities Passangers"].iloc[position])
         coo = coo + 1
-
 print(coo)
-coo = 0
-dataset = dataset[dataset["Fatalities"].notna()]
-for position, i in enumerate(dataset.Fatalities):
-    coo = coo + 1
-    #if type(i) != float:
-    nenna = (dataset["Fatalities Crew"].iloc[position] + dataset["Fatalities Passangers"].iloc[position])
-    if i < nenna:
-        print("mannaggia", i, nenna)
-    #if i == 0.0:
-    #   print("fata","fata crew","fata pass")
-    #  print(i,dataset["Fatalities Crew"].iloc[position] ,dataset["Fatalities Passangers"].iloc[position])
-    #coo = coo + 1
-
-print(coo)
-
-
+#%%
 def na_counter_for_numeric_column(column, nome_colonna):
     nas = []
     for value in column:

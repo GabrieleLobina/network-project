@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.axes as axes
 import  math
-
 #!{sys.executable} -m pip install seaborn
 import seaborn as sb
 #%%
@@ -402,9 +401,7 @@ print(dataset['Date'])
 new_date=[]
 #%%
 for i in dataset.Date :
-    #print (re.findall('[0-9]{4}',i))
     new_date.append(*re.findall('[0-9]{4}',i))
-    #a = a.append(i[i.re.findall('[0-9]{4}',i)])
 print(new_date)
 
 #%%
@@ -431,11 +428,8 @@ Ovviamente nel codice sono presenti dei print esclusivamente a fini di comprensi
 ore=[]
 #%%
 for i in dataset.Time :
-        #if type(i) == float:
-         #   print(i)
         if type(i) == str:
             ore.append(i)
-
 print(ore,len(ore))
 #%%
 bbb= 0
@@ -452,8 +446,6 @@ print(bb)
 #%%
 new_ore = []
 for i in ore:
-    #print(i,re.sub(rf"[:].*","",i))
-    #i = (re.sub(rf"[:].*","",i))
     new_ore.append(re.sub(rf"[:].*","",i))
 print(new_ore,len(new_ore))
 
@@ -463,7 +455,6 @@ f=0
 for i in new_ore:
     i=int(i)
     f=f+1
-    #print(i,type(i))
 print(f)
 #%%
 int_ore=[]
@@ -473,86 +464,6 @@ print(len(int_ore),int_ore,type(int_ore[2]))
 #%%
 dataset=dataset.assign(Hour=new_ore)
 #%%
-
-#%% md
-
-#%% md
-###    Leo
-#%% md
-Change data format
-
-#%%
-print(dataset['Date'])
-#%% md
-
-#%%
-new_date=[]
-#%%
-for i in dataset.Date :
-    #print (re.findall('[0-9]{4}',i))
-    new_date.append(*re.findall('[0-9]{4}',i))
-    #a = a.append(i[i.re.findall('[0-9]{4}',i)])
-print(new_date)
-
-#%%
-dataset=dataset.assign(Year=new_date)
-#%%
-dataset.columns
-#%%
-print(type(dataset.Year))
-#%%
-for i in dataset.Year:
-    print(type(i))
-#%%
-dataset["Year"]=dataset["Year"].astype(int)
-#%% md
-La colonna Date è rimasta all'interno del dataset senza subire modifiche, è stata invece aggiunta una nuova colonna denominata Year contenente solo l'anno presente nella colonna Date, al fine di eliminare il problemma di disomogeneità dei dati a causa dei diversi formati dd/mm/yyyy e mm/dd/yyyy presenti nel dataset a causa delle differene fra sistema anglosassone ed europeo.
-#%% md
-
-#%% md
-Ovviamente nel codice sono presenti dei print esclusivamente a fini di comprensione del lavoro che possono essere eliminati nella versione finale.
-#%% md
-###     Osservazione variabile Time
-
-#%%
-ore=[]
-#%%
-for i in dataset.Time :
-        #if type(i) == float:
-         #   print(i)
-        if type(i) == str:
-            ore.append(i)
-
-print(ore,len(ore))
-#%%
-bbb= 0
-for i in dataset.Time :
-        if type(i) == float:
-            bbb = bbb+1
-print(bbb)
-#%%
-bb= 0
-for i in dataset.Time :
-        if type(i) == str:
-            bb = bb+1
-print(bb)
-#%%
-new_ore = []
-for i in ore:
-    #print(i,re.sub(rf"[:].*","",i))
-    #i = (re.sub(rf"[:].*","",i))
-    new_ore.append(re.sub(rf"[:].*","",i))
-print(new_ore,len(new_ore))
-
-
-#%%
-f=0
-for i in new_ore:
-    i=int(i)
-    f=f+1
-    #print(i,type(i))
-print(f)
-#%%
 int_ore=[]
 for i in new_ore:
     int_ore.append(int(i))
@@ -575,109 +486,6 @@ plt.title("Histogram")
 plt.show()
 #%%
 #dataset=dataset.assign(Hour=new_ore)
-#%% md
-
-#%% md
-###    Leo
-#%% md
-Change data format
-
-#%%
-print(dataset['Date'])
-#%% md
-
-#%%
-new_date=[]
-#%%
-for i in dataset.Date :
-    #print (re.findall('[0-9]{4}',i))
-    new_date.append(*re.findall('[0-9]{4}',i))
-    #a = a.append(i[i.re.findall('[0-9]{4}',i)])
-print(new_date)
-
-#%%
-dataset=dataset.assign(Year=new_date)
-#%%
-dataset.columns
-#%%
-print(type(dataset.Year))
-#%%
-for i in dataset.Year:
-    print(type(i))
-#%%
-dataset["Year"]=dataset["Year"].astype(int)
-#%% md
-La colonna Date è rimasta all'interno del dataset senza subire modifiche, è stata invece aggiunta una nuova colonna denominata Year contenente solo l'anno presente nella colonna Date, al fine di eliminare il problemma di disomogeneità dei dati a causa dei diversi formati dd/mm/yyyy e mm/dd/yyyy presenti nel dataset a causa delle differene fra sistema anglosassone ed europeo.
-#%% md
-
-#%% md
-Ovviamente nel codice sono presenti dei print esclusivamente a fini di comprensione del lavoro che possono essere eliminati nella versione finale.
-#%% md
-###     Osservazione variabile Time
-
-#%%
-ore=[]
-#%%
-for i in dataset.Time :
-        #if type(i) == float:
-         #   print(i)
-        if type(i) == str:
-            ore.append(i)
-
-print(ore,len(ore))
-#%%
-bbb= 0
-for i in dataset.Time :
-        if type(i) == float:
-            bbb = bbb+1
-print(bbb)
-#%%
-bb= 0
-for i in dataset.Time :
-        if type(i) == str:
-            bb = bb+1
-print(bb)
-#%%
-new_ore = []
-for i in ore:
-    #print(i,re.sub(rf"[:].*","",i))
-    #i = (re.sub(rf"[:].*","",i))
-    new_ore.append(re.sub(rf"[:].*","",i))
-print(new_ore,len(new_ore))
-
-
-#%%
-f=0
-for i in new_ore:
-    i=int(i)
-    f=f+1
-    #print(i,type(i))
-print(f)
-#%%
-int_ore=[]
-for i in new_ore:
-    int_ore.append(int(i))
-print(len(int_ore),int_ore,type(int_ore[2]))
-#%%
-for i in int_ore:
-    if i > 24:
-        print(i)
-import math
-import numpy
-print(numpy.mean(int_ore))
-#%%
-
-patches=plt.hist(int_ore)
-np.arange()
-
-plt.xlabel("Values")
-plt.ylabel("Frequency")
-plt.title("Histogram")
-plt.show()
-#%%
-#dataset=dataset.assign(Hour=new_ore)
-#%% md
-
 #%% md
 ##### Si è scelto di non utilizzare la colonna Time in quanto poco significativa come distribuzione e poiché presenta un 30% circa di nan
 #%% md
@@ -704,8 +512,8 @@ new_fat = []
 new_pass = []
 new_ground = []
 new_crew = []
-for position, i in enumerate(dataset[
-                                 "Fatalities"]):  ##try and except per gestione na presenti nel dataset originali, tenuti per scelta stilistica e non per motivi computazionali
+for position, i in enumerate(dataset["Fatalities"]):
+    ##try and except per gestione na presenti nel dataset originali, tenuti per scelta stilistica e non per motivi computazionali
     try:
         total_death = (dataset["Fatalities Crew"].iloc[position] + dataset["Fatalities Passangers"].iloc[position] +
                        dataset["Ground"].iloc[position])
@@ -766,6 +574,11 @@ for position, i in enumerate(dataset.Aboard):
             new_aboard_pass.append(dataset["Aboard Passangers"].iloc[position])
     except:
         print("mannaggia")
+#%%
+dataset.shape
+dataset = dataset.assign(new_aboard=new_aboard, new_aboard_crew=new_aboard_crew, new_aboard_pass=new_aboard_pass)
+dataset
+print(dataset.shape)
 #%%
 print(dataset["Aboard"], new_aboard)
 coo = 0

@@ -263,20 +263,132 @@ na_counter_for_numeric_column(dataset["Fatalities Passangers"], "Fatalities Pass
 ---
 ---
 # Maic
+#%% md
+#### Check degli NA nella colonna Location
 #%%
-print("numero di NaN nella colonna Time:", len([i for i in dataset.Time if type(i) == float])) # abbiamo solo 10 Na
+print("numero di NaN nella colonna Location:", len([i for i in dataset.Location if type(i) == float])) # Non abbiamo NA
+#%% md
+### Location Variable -> estraiamo dal testo solo gli stati
+#%% md
+#### regex per prendere solo quello dopo l'ultima virgola
 #%%
+new_location = []
 for w in dataset.Location:
-    print(w)
-#%%
-dataset.keys()
-#%%
-dataset.keys()
-#%%
+    new_location.append(re.findall("[^ ,]\w*$", str(w)))
 
+print(new_location)
+#%% md
+#### Dal momento in cui le stringhe sono dentro una lista, tramite un ciclo annidato andiamo ad estrarre le stringhe e successivamente mettiamo tutto dentro una lista di supporto
+#%%
+tmp_state = []
+for i in new_location:
+    for w in i:
+        tmp_state.append(w)
+
+print(tmp_state)
+#%% md
+#### Pulisco i valori
+#%%
+tmp_state_cleaned = []
+for i in tmp_state:
+    tmp_state_cleaned. append(re.sub(rf"[^\w\s]", "", i))
+
+print(tmp_state_cleaned)
+#%% md
+#### Infine andiamo a creare una nuovo variabile a ad inserirla all'interno del dataset
+#%%
+dataset = dataset.assign(state_location = tmp_state_cleaned)
+print(dataset.state_location)
+#%%
+list_of_states = dataset.state_location.unique()
+print(list_of_states)
+#%% md
+#### Noto che c'è un nan value e campi vuoti non visti in precedenza
+#%%
+count_nan = 0
+count_vuoti = 0
+for i in dataset.state_location:
+    if i == 'nan':
+        count_nan += 1
+    elif i == '':
+        count_vuoti += 1
+
+print('counter nan: ', count_nan)
+print('counter spazi vuoti: ', count_vuoti)
+#%% md
+#### Li elimino
+#%%
+dataset = dataset[dataset.state_location != 'nan']
+dataset = dataset[dataset.state_location != '']
+print(dataset)
+#%% md
+#### Check finale
+#%%
+count = 0
+for i in dataset.state_location:
+    if i == 'nan' or i == '':
+        count+=1
+print(count)
+#%% md
+#### Accorpo alcuni stati e correggo quelli scritti in modo scorretto
+#%% md
+##### Stati Uniti
+#%%
+print(list_of_states)
+#%%
+USA_states = ['Virginia', 'Jersey', 'Ohio', 'Pennsylvania',  'Illinois', 'Maryland', 'Kent', 'Indiana', 'Iowa', 'Columbia', 'Wyoming', 'Minnisota', 'Wisconsin', 'Nevada', 'NY', 'WY', 'States', 'York', 'Utah', 'Oregon', 'Idaho', 'Connecticut', 'Minnesota', 'Kansas', 'Texas', 'Washington', 'Tennessee', 'Greece', 'California', 'Mexico', 'Missouri', 'Massachusetts', 'Utah', 'Ilinois', 'Florida', 'Michigan', 'Arkansas', 'Colorado', 'Georgia', 'Montana', 'Mississippi', 'Alaska', 'Cailifornia', 'Indies', 'Andes', 'Guam', 'Tonkin', 'Carolina', 'Kentucky', 'Maine', 'Alabama', 'Delaware', 'Dekota', 'Hampshire', 'Washingon', 'DC', 'Tennesee', 'Deleware', 'Louisiana', 'Massachutes', 'Alakska', 'Coloado', 'Vermont', 'Dakota', 'Calilfornia', 'Alaksa', 'Mississipi', 'Arizona', 'Wisconson', 'Nebraska', 'Oklahoma', 'Airzona']
+states = []
+for state in dataset.state_location:
+    if state in USA_states:
+        states.append('USA')
+    else: states.append(state)
+
+print(states)
+#%%
+print(set(states))
+#%% md
+##### Correzioni varie
+#%%
+states2 = []
+for state in states:
+    states2.append(state.replace('USSR', 'Russia').
+                   replace('Canada2','Canada').
+                   replace('UAR','UAE').
+                   replace('Emirates','UAE').
+                   replace('Djibouti','Djbouti').
+                   replace('Bulgeria','Bulgaria').
+                   replace('bulgaria','Bulgaria').
+                   replace('Aregntina','Argentina').
+                   replace('Amsterdam','Belgium').
+                   replace('Ontario','Canada').
+                   replace('Okinawa','Japan').
+                   replace('karkov','Ukraine').
+                   replace('Jamacia','Jamaica').
+                   replace('Argenina','Argentina').
+                   replace('Airstrip','Airport').
+                   replace('Algiers','Algeria').
+                   replace('Russian', 'Russia').
+                   replace('Swden', 'Sweden').
+                   replace('coast', 'Coast'))
+
+print(set(states2))
+#%% md
+##### Regno Unito
+#%%
+states_UK = ['UK','Wales','Scotland', 'Eire', 'Union', 'Kingdom', 'England']
+states3 = []
+for state in states2:
+    if state in states_UK:
+        states3.append('UK')
+    else: states3.append(state)
+
+print(set(states3))
+#%% md
+#### Infine inserisco la variabile nel dataset
+#%%
+dataset = dataset.assign(States = states3)
 #%% md
 
-#%% md
 ###    Leo
 #%% md
 Change data format

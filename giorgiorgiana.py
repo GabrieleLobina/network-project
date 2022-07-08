@@ -1,3 +1,4 @@
+
 #%%
 import pandas as pd
 import re
@@ -649,6 +650,18 @@ na_counter_for_numeric_column(dataset["Ground"], "Ground")
 dataset.keys()
 # dataset = dataset.assign(new_fat=new_fat, new_crew=new_crew)
 #%% md
+# Eliminazione Variabili (maic)
+#%%
+
+col_to_del = ['Date', 'Time', 'Location', 'Flight #', 'Registration', 'cn/ln', 'state_location', 'Ac Type', 'Route', 'Fatalities', 'Fatalities Crew', 'Fatalities Passangers', 'Grounds']
+
+dataset_def = dataset
+for col in dataset_def.columns:
+    if col in col_to_del:
+        dataset_def = dataset_def.drop(col, axis=1)
+
+dataset_def
+#%% md
 # Grafi (Gabro)
 #%%
 import networkx as nx
@@ -659,3 +672,6 @@ nodes.add_nodes_from(dataset["Aeroporto_di_partenza"])
 #%%
 nx.draw(nodes)
 #%%
+
+#%%
+print(dataset.columns)

@@ -5,7 +5,7 @@ import matplotlib as mlt
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.axes as axes
-import  math
+import math
 #!{sys.executable} -m pip install seaborn
 import seaborn as sb
 #%%
@@ -18,7 +18,7 @@ dataset
 #%% md
 #### Cleaning colonna **Operator**
 #%%
-print("numero di Na:", len([i for i in dataset.Operator if type(i) == float])) # abbiamo solo 10 Na
+print("numero di Na:", len([i for i in dataset.Operator if type(i) == float]))  # abbiamo solo 10 Na
 print(dataset.shape)
 
 # Eliminazione righe contenenti Na nella colonna Operator
@@ -41,8 +41,8 @@ for operator in dataset['Operator'].unique():
 # Identifica tutti i nomi degli operatori che in Route hanno Test flight e Test presumendo che si trattino anche essi di voli militari
 test_flights = ["Test", "Test flight"]
 for position, operator in enumerate(dataset['Operator']):
-    if dataset.Route.iloc[position] in test_flights and operator not in military_flights: military_flights.append(operator)
-
+    if dataset.Route.iloc[position] in test_flights and operator not in military_flights: military_flights.append(
+        operator)
 
 print("numero di operatori militari univoci:", len(military_flights))  # 251 valori univoci relativi
 #%% md
@@ -56,7 +56,8 @@ postal_e_cargo_words = ["postal", "mail", "aeropostale", "cargo", "express"]
 for operator in dataset['Operator'].unique():
     if type(operator) != float:
         for word in postal_e_cargo_words:
-            if word.lower() in operator.lower() and operator not in postal_cargo_flights: postal_cargo_flights.append(operator)
+            if word.lower() in operator.lower() and operator not in postal_cargo_flights: postal_cargo_flights.append(
+                operator)
 
 print("numero di operatori postali/cargo univoci:", len(postal_cargo_flights))
 #%%
@@ -83,7 +84,8 @@ for value in dataset.Operator:
         new_column.append("Postal/Cargo flight")
     elif value in private_flights:
         new_column.append("Private flights")
-    else: new_column.append("Scheduled flight")
+    else:
+        new_column.append("Scheduled flight")
 #%% md
 ## ambulance --> decidere se assegnare una macro categoria
 #%%
@@ -94,22 +96,28 @@ print(len(dataset.New_Operator_column.unique()))
 #%% md
 #### Cleaning colonna **Route**
 #%%
-print("numero di NaN nella colonna Time:", len([i for i in dataset.Route if type(i) == float]))  # 774.. Non troppi, quindi da eliminare
+print("numero di NaN nella colonna Time:",
+      len([i for i in dataset.Route if type(i) == float]))  # 774.. Non troppi, quindi da eliminare
 #%%
 rotte = []
 
 for route in dataset.Route:
-    if type(route) != float: rotte.append(route.split("-"))
-    else: rotte.append(route)
+    if type(route) != float:
+        rotte.append(route.split("-"))
+    else:
+        rotte.append(route)
 
 rotte_pulite = []
 for route in rotte:
     new_route = []
     if type(route) != float:
         for aeroport in route:
-            if "," in aeroport: new_route.append(re.sub(f",.+", "", aeroport))
-            else: new_route.append(aeroport)
-    else: new_route.append(route)
+            if "," in aeroport:
+                new_route.append(re.sub(f",.+", "", aeroport))
+            else:
+                new_route.append(aeroport)
+    else:
+        new_route.append(route)
     rotte_pulite.append(new_route)
 
 print(rotte_pulite)
@@ -134,7 +142,6 @@ aeroporto_3 = []
 aeroporto_4 = []
 aeroporto_5 = []
 aeroporto_6 = []
-
 
 # Molto brutto... Decidere se cambiare
 for n_aeroporti in rotte_pulite:
@@ -216,14 +223,16 @@ simplified_aircraft_names = []
 for airplane in dataset["AC Type"]:
     if type(airplane) != float and len(airplane.split()) > 1:
         simplified_aircraft_names.append(re.sub(r"[A-Z0-9]+-.+", "", airplane).upper())
-    else: simplified_aircraft_names.append(airplane)
+    else:
+        simplified_aircraft_names.append(airplane)
 
 # Eliminazione dei pattern tipo "15.L ..." e "V.17 ..."
 simplified_aircraft_names_1 = []
 for position, airplane in enumerate(simplified_aircraft_names):
     if type(airplane) != float and len(airplane.split()) > 1:
         simplified_aircraft_names_1.append(re.sub(r"[A-Z0-9]+\.(.)+", "", airplane))
-    else: simplified_aircraft_names_1.append(airplane)
+    else:
+        simplified_aircraft_names_1.append(airplane)
 
 print(simplified_aircraft_names_1)
 #%% md
@@ -251,6 +260,7 @@ def na_counter_for_numeric_column(column, nome_colonna):
             nas.append(value)
     return print(f"Numero di Na della colonna {nome_colonna}: {len(nas)}")
 
+
 na_counter_for_numeric_column(dataset["Aboard"], "Aboard")
 na_counter_for_numeric_column(dataset["Aboard Crew"], "Aboard Crew")
 na_counter_for_numeric_column(dataset["Aboard Passangers"], "Aboard Passangers")
@@ -266,7 +276,7 @@ na_counter_for_numeric_column(dataset["Fatalities Passangers"], "Fatalities Pass
 #%% md
 #### Check degli NA nella colonna Location
 #%%
-print("numero di NaN nella colonna Location:", len([i for i in dataset.Location if type(i) == float])) # Non abbiamo NA
+print("numero di NaN nella colonna Location:", len([i for i in dataset.Location if type(i) == float]))  # Non abbiamo NA
 #%% md
 ### Location Variable -> estraiamo dal testo solo gli stati
 #%% md
@@ -291,13 +301,13 @@ print(tmp_state)
 #%%
 tmp_state_cleaned = []
 for i in tmp_state:
-    tmp_state_cleaned. append(re.sub(rf"[^\w\s]", "", i))
+    tmp_state_cleaned.append(re.sub(rf"[^\w\s]", "", i))
 
 print(tmp_state_cleaned)
 #%% md
 #### Infine andiamo a creare una nuovo variabile a ad inserirla all'interno del dataset
 #%%
-dataset = dataset.assign(state_location = tmp_state_cleaned)
+dataset = dataset.assign(state_location=tmp_state_cleaned)
 print(dataset.state_location)
 #%%
 list_of_states = dataset.state_location.unique()
@@ -327,7 +337,7 @@ print(dataset)
 count = 0
 for i in dataset.state_location:
     if i == 'nan' or i == '':
-        count+=1
+        count += 1
 print(count)
 #%% md
 #### Accorpo alcuni stati e correggo quelli scritti in modo scorretto
@@ -336,12 +346,20 @@ print(count)
 #%%
 print(list_of_states)
 #%%
-USA_states = ['Virginia', 'Jersey', 'Ohio', 'Pennsylvania',  'Illinois', 'Maryland', 'Kent', 'Indiana', 'Iowa', 'Columbia', 'Wyoming', 'Minnisota', 'Wisconsin', 'Nevada', 'NY', 'WY', 'States', 'York', 'Utah', 'Oregon', 'Idaho', 'Connecticut', 'Minnesota', 'Kansas', 'Texas', 'Washington', 'Tennessee', 'Greece', 'California', 'Mexico', 'Missouri', 'Massachusetts', 'Utah', 'Ilinois', 'Florida', 'Michigan', 'Arkansas', 'Colorado', 'Georgia', 'Montana', 'Mississippi', 'Alaska', 'Cailifornia', 'Indies', 'Andes', 'Guam', 'Tonkin', 'Carolina', 'Kentucky', 'Maine', 'Alabama', 'Delaware', 'Dekota', 'Hampshire', 'Washingon', 'DC', 'Tennesee', 'Deleware', 'Louisiana', 'Massachutes', 'Alakska', 'Coloado', 'Vermont', 'Dakota', 'Calilfornia', 'Alaksa', 'Mississipi', 'Arizona', 'Wisconson', 'Nebraska', 'Oklahoma', 'Airzona']
+USA_states = ['Virginia', 'Jersey', 'Ohio', 'Pennsylvania', 'Illinois', 'Maryland', 'Kent', 'Indiana', 'Iowa',
+              'Columbia', 'Wyoming', 'Minnisota', 'Wisconsin', 'Nevada', 'NY', 'WY', 'States', 'York', 'Utah', 'Oregon',
+              'Idaho', 'Connecticut', 'Minnesota', 'Kansas', 'Texas', 'Washington', 'Tennessee', 'Greece', 'California',
+              'Mexico', 'Missouri', 'Massachusetts', 'Utah', 'Ilinois', 'Florida', 'Michigan', 'Arkansas', 'Colorado',
+              'Georgia', 'Montana', 'Mississippi', 'Alaska', 'Cailifornia', 'Indies', 'Andes', 'Guam', 'Tonkin',
+              'Carolina', 'Kentucky', 'Maine', 'Alabama', 'Delaware', 'Dekota', 'Hampshire', 'Washingon', 'DC',
+              'Tennesee', 'Deleware', 'Louisiana', 'Massachutes', 'Alakska', 'Coloado', 'Vermont', 'Dakota',
+              'Calilfornia', 'Alaksa', 'Mississipi', 'Arizona', 'Wisconson', 'Nebraska', 'Oklahoma', 'Airzona']
 states = []
 for state in dataset.state_location:
     if state in USA_states:
         states.append('USA')
-    else: states.append(state)
+    else:
+        states.append(state)
 
 print(states)
 #%%
@@ -352,21 +370,21 @@ print(set(states))
 states2 = []
 for state in states:
     states2.append(state.replace('USSR', 'Russia').
-                   replace('Canada2','Canada').
-                   replace('UAR','UAE').
-                   replace('Emirates','UAE').
-                   replace('Djibouti','Djbouti').
-                   replace('Bulgeria','Bulgaria').
-                   replace('bulgaria','Bulgaria').
-                   replace('Aregntina','Argentina').
-                   replace('Amsterdam','Belgium').
-                   replace('Ontario','Canada').
-                   replace('Okinawa','Japan').
-                   replace('karkov','Ukraine').
-                   replace('Jamacia','Jamaica').
-                   replace('Argenina','Argentina').
-                   replace('Airstrip','Airport').
-                   replace('Algiers','Algeria').
+                   replace('Canada2', 'Canada').
+                   replace('UAR', 'UAE').
+                   replace('Emirates', 'UAE').
+                   replace('Djibouti', 'Djbouti').
+                   replace('Bulgeria', 'Bulgaria').
+                   replace('bulgaria', 'Bulgaria').
+                   replace('Aregntina', 'Argentina').
+                   replace('Amsterdam', 'Belgium').
+                   replace('Ontario', 'Canada').
+                   replace('Okinawa', 'Japan').
+                   replace('karkov', 'Ukraine').
+                   replace('Jamacia', 'Jamaica').
+                   replace('Argenina', 'Argentina').
+                   replace('Airstrip', 'Airport').
+                   replace('Algiers', 'Algeria').
                    replace('Russian', 'Russia').
                    replace('Swden', 'Sweden').
                    replace('coast', 'Coast'))
@@ -375,18 +393,19 @@ print(set(states2))
 #%% md
 ##### Regno Unito
 #%%
-states_UK = ['UK','Wales','Scotland', 'Eire', 'Union', 'Kingdom', 'England']
+states_UK = ['UK', 'Wales', 'Scotland', 'Eire', 'Union', 'Kingdom', 'England']
 states3 = []
 for state in states2:
     if state in states_UK:
         states3.append('UK')
-    else: states3.append(state)
+    else:
+        states3.append(state)
 
 print(set(states3))
 #%% md
 #### Infine inserisco la variabile nel dataset
 #%%
-dataset = dataset.assign(States = states3)
+dataset = dataset.assign(States=states3)
 #%% md
 
 ###    Leo
@@ -398,14 +417,16 @@ print(dataset['Date'])
 #%% md
 
 #%%
-new_date=[]
+new_date = []
 #%%
-for i in dataset.Date :
-    new_date.append(*re.findall('[0-9]{4}',i))
+for i in dataset.Date:
+    #print (re.findall('[0-9]{4}',i))
+    new_date.append(*re.findall('[0-9]{4}', i))
+    #a = a.append(i[i.re.findall('[0-9]{4}',i)])
 print(new_date)
 
 #%%
-dataset=dataset.assign(Year=new_date)
+dataset = dataset.assign(Year=new_date)
 #%%
 dataset.columns
 #%%
@@ -414,7 +435,7 @@ print(type(dataset.Year))
 for i in dataset.Year:
     print(type(i))
 #%%
-dataset["Year"]=dataset["Year"].astype(int)
+dataset["Year"] = dataset["Year"].astype(int)
 #%% md
 La colonna Date è rimasta all'interno del dataset senza subire modifiche, è stata invece aggiunta una nuova colonna denominata Year contenente solo l'anno presente nella colonna Date, al fine di eliminare il problemma di disomogeneità dei dati a causa dei diversi formati dd/mm/yyyy e mm/dd/yyyy presenti nel dataset a causa delle differene fra sistema anglosassone ed europeo.
 #%% md
@@ -425,60 +446,67 @@ Ovviamente nel codice sono presenti dei print esclusivamente a fini di comprensi
 ###     Osservazione variabile Time
 
 #%%
-ore=[]
+ore = []
 #%%
-for i in dataset.Time :
-        if type(i) == str:
-            ore.append(i)
-print(ore,len(ore))
+for i in dataset.Time:
+    #if type(i) == float:
+    #   print(i)
+    if type(i) == str:
+        ore.append(i)
+
+print(ore, len(ore))
 #%%
-bbb= 0
-for i in dataset.Time :
-        if type(i) == float:
-            bbb = bbb+1
+bbb = 0
+for i in dataset.Time:
+    if type(i) == float:
+        bbb = bbb + 1
 print(bbb)
 #%%
-bb= 0
-for i in dataset.Time :
-        if type(i) == str:
-            bb = bb+1
+bb = 0
+for i in dataset.Time:
+    if type(i) == str:
+        bb = bb + 1
 print(bb)
 #%%
 new_ore = []
 for i in ore:
-    new_ore.append(re.sub(rf"[:].*","",i))
-print(new_ore,len(new_ore))
+    #print(i,re.sub(rf"[:].*","",i))
+    #i = (re.sub(rf"[:].*","",i))
+    new_ore.append(re.sub(rf"[:].*", "", i))
+print(new_ore, len(new_ore))
 
 
 #%%
-f=0
+f = 0
 for i in new_ore:
-    i=int(i)
-    f=f+1
+    i = int(i)
+    f = f + 1
+    #print(i,type(i))
 print(f)
 #%%
-int_ore=[]
+int_ore = []
 for i in new_ore:
     int_ore.append(int(i))
-print(len(int_ore),int_ore,type(int_ore[2]))
+print(len(int_ore), int_ore, type(int_ore[2]))
 #%%
-dataset=dataset.assign(Hour=new_ore)
+# dataset = dataset.assign(Hour=new_ore)
 #%%
-int_ore=[]
+int_ore = []
 for i in new_ore:
     int_ore.append(int(i))
-print(len(int_ore),int_ore,type(int_ore[2]))
+print(len(int_ore), int_ore, type(int_ore[2]))
 #%%
 for i in int_ore:
     if i > 24:
         print(i)
 import math
 import numpy
+
 print(numpy.mean(int_ore))
 #%%
 
-patches=plt.hist(int_ore)
-np.arange()
+patches = plt.hist(int_ore)
+# np.arange()
 
 plt.xlabel("Values")
 plt.ylabel("Frequency")
@@ -512,8 +540,8 @@ new_fat = []
 new_pass = []
 new_ground = []
 new_crew = []
-for position, i in enumerate(dataset["Fatalities"]):
-    ##try and except per gestione na presenti nel dataset originali, tenuti per scelta stilistica e non per motivi computazionali
+for position, i in enumerate(dataset[
+                                 "Fatalities"]):  ##try and except per gestione na presenti nel dataset originali, tenuti per scelta stilistica e non per motivi computazionali
     try:
         total_death = (dataset["Fatalities Crew"].iloc[position] + dataset["Fatalities Passangers"].iloc[position] +
                        dataset["Ground"].iloc[position])
@@ -544,10 +572,8 @@ print(len(new_ground), "new gr")
 print(len(new_pass), "new pass")
 print(len(new_crew), "new crew")
 #%%
-dataset.shape
 dataset = dataset.assign(new_fat=new_fat, new_crew=new_crew, new_pass=new_pass, new_ground=new_ground)
 dataset
-print(dataset.shape)
 #%%
 print(dataset.shape)
 dataset = dataset[dataset["Aboard"].notna()]
@@ -575,10 +601,11 @@ for position, i in enumerate(dataset.Aboard):
     except:
         print("mannaggia")
 #%%
-dataset.shape
+print(dataset.shape)
 dataset = dataset.assign(new_aboard=new_aboard, new_aboard_crew=new_aboard_crew, new_aboard_pass=new_aboard_pass)
 dataset
-print(dataset.shape)
+#%% md
+# Il codice quà sotto serve?
 #%%
 print(dataset["Aboard"], new_aboard)
 coo = 0
@@ -609,13 +636,26 @@ na_counter_for_numeric_column(dataset["Fatalities Crew"], "Fatalities Crew")
 na_counter_for_numeric_column(dataset["Fatalities Passangers"], "Fatalities Passangers")
 na_counter_for_numeric_column(dataset["Ground"], "Ground")
 
-print(dataset.shape)
-dataset = dataset[dataset["Fatalities"].notna()]
-dataset = dataset[dataset["Fatalities Crew"].notna()]
-dataset = dataset[dataset["Fatalities Passangers"].notna()]
-dataset = dataset[dataset["Ground"].notna()]
-print(dataset.shape)
-print(np.mean(dataset("")))
-dataset = dataset["Ground"].dropna
+
+""" La parte quà sotto era già stata fatta """
+# print(dataset.shape)
+# dataset = dataset[dataset["Fatalities"].notna()]
+# dataset = dataset[dataset["Fatalities Crew"].notna()]
+# dataset = dataset[dataset["Fatalities Passangers"].notna()]
+# dataset = dataset[dataset["Ground"].notna()]
+# print(dataset.shape)
+# print(np.mean(dataset("")))
+# dataset = dataset[dataset["Ground"].notna()]
 dataset.keys()
-dataset = dataset.assign(new_fat=new_fat, new_crew=new_crew)
+# dataset = dataset.assign(new_fat=new_fat, new_crew=new_crew)
+#%% md
+# Grafi (Gabro)
+#%%
+import networkx as nx
+#%%
+nodes = nx.Graph()
+#%%
+nodes.add_nodes_from(dataset["Aeroporto_di_partenza"])
+#%%
+nx.draw(nodes)
+#%%

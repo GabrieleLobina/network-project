@@ -1,3 +1,5 @@
+#%% md
+
 #%%
 import pandas as pd
 import re
@@ -86,6 +88,8 @@ for value in dataset.Operator:
         new_column.append("Private flights")
     else:
         new_column.append("Scheduled flight")
+#%% md
+## ambulance --> decidere se assegnare una macro categoria
 #%%
 dataset = dataset.assign(New_Operator_column=new_column)
 dataset
@@ -344,7 +348,10 @@ print(count)
 #%% md
 ##### Stati Uniti
 #%%
-print(list_of_states)
+list_of_states_cleaned = dataset.state_location.unique()
+print(list_of_states_cleaned)
+#%%
+
 #%%
 USA_states = ['Virginia', 'Jersey', 'Ohio', 'Pennsylvania', 'Illinois', 'Maryland', 'Kent', 'Indiana', 'Iowa',
               'Columbia', 'Wyoming', 'Minnisota', 'Wisconsin', 'Nevada', 'NY', 'WY', 'States', 'York', 'Utah', 'Oregon',
@@ -353,27 +360,28 @@ USA_states = ['Virginia', 'Jersey', 'Ohio', 'Pennsylvania', 'Illinois', 'Marylan
               'Georgia', 'Montana', 'Mississippi', 'Alaska', 'Cailifornia', 'Indies', 'Andes', 'Guam', 'Tonkin',
               'Carolina', 'Kentucky', 'Maine', 'Alabama', 'Delaware', 'Dekota', 'Hampshire', 'Washingon', 'DC',
               'Tennesee', 'Deleware', 'Louisiana', 'Massachutes', 'Alakska', 'Coloado', 'Vermont', 'Dakota',
-              'Calilfornia', 'Alaksa', 'Mississipi', 'Arizona', 'Wisconson', 'Nebraska', 'Oklahoma', 'Airzona']
+              'Calilfornia', 'Alaksa', 'Mississipi', 'Arizona', 'Wisconson', 'Nebraska', 'Oklahoma', 'Airzona', 'HI', 'Hawaii']
 states = []
 for state in dataset.state_location:
     if state in USA_states:
-        states.append('USA')
+        states.append('United States')
     else:
         states.append(state)
 
 print(states)
 #%%
-print(set(states))
+print(sorted(set(states)))
 #%% md
 ##### Correzioni varie
 #%%
 states2 = []
 for state in states:
-    states2.append(state.replace('USSR', 'Russia').
-                   replace('Canada2', 'Canada').
-                   replace('UAR', 'UAE').
-                   replace('Emirates', 'UAE').
-                   replace('Djibouti', 'Djbouti').
+    states2.append(state.replace('Canada2', 'Canada').
+                   replace('CA', 'Canada').
+                   replace('UAR', 'Emirates').
+                   replace('Emirates', 'Emirates').
+                   replace('UAE', 'Emirates').
+                   replace('Djbouti', 'Djibouti').
                    replace('Bulgeria', 'Bulgaria').
                    replace('bulgaria', 'Bulgaria').
                    replace('Aregntina', 'Argentina').
@@ -387,17 +395,83 @@ for state in states:
                    replace('Algiers', 'Algeria').
                    replace('Russian', 'Russia').
                    replace('Swden', 'Sweden').
-                   replace('coast', 'Coast'))
+                   replace('coast', 'Coast').
+                   replace('BO', 'Bolivia').
+                   replace('Rico', 'Costa Rica').
+                   replace('Rica', 'Costa Rica').
+                   replace('Karkinitsky', 'Ukraine').
+                   replace('Saskatchewan', 'Canada').
+                   replace('Australila', 'Australia').
+                   replace('Inodnesia', 'Indonesia').
+                   replace('Chili', 'Chile').
+                   replace('Korean', 'Korea').
+                   replace('Uzbekstan', 'Uzbekistan').
+                   replace('Cogo', 'Congo').
+                   replace('Zaire', 'Democratic Republic of Congo').
+                   replace('Inagua', 'Bahamas').
+                   replace('Bimini', 'Bahamas').
+                   replace('Philipines', 'Philippines').
+                   replace('Marroco', 'Morocco').
+                   replace('Yugosalvia', 'Yugoslavia').
+                   replace('Ariège', 'France').
+                   replace('Arabia', 'Saudi Arabia').
+                   replace('Cachoeria', 'Brazil').
+                   replace('Kirghizia', 'Kyrgyzstan').
+                   replace('Reunion', 'France').
+                   replace('Volta', 'Ghana').
+                   replace('Manmar', 'Myanmar').
+                   replace('Baangladesh', 'Bangladesh').
+                   replace('Papua', 'Papua New Guinea').
+                   replace('Mauretania', 'Mauritania').
+                   replace('Azores', 'Portugal').
+                   replace('Antigua', 'Bermuda').
+                   replace('Zealand', 'New Zealand').
+                   replace('Elalat', 'Saudi Arabia').
+                   replace('Sarawak', 'Mali').
+                   replace('Phillipines', 'Philippines').
+                   replace('Afghanstan', 'Afghanistan').
+                   replace('Boliva', 'Bolivia').
+                   replace('Napal', 'Nepal').
+                   replace('Bosnia', 'Bosnia').
+                   replace('Burma', 'Myanmar').
+                   replace('Nambia', 'Namibia').
+                   replace('Malaya', 'Malaysia').
+                   replace('Hati', 'Haiti').
+                   replace('Labrador', 'Canada').
+                   replace('Coatia', 'Croatia').
+                   replace('Province', 'France').
+                   replace('Crete', 'Greece').
+                   replace('Tanganyika', 'Tanzania').
+                   replace('Lanka', 'Sri Lanka').
+                   replace('Karkov', 'Ukraine').
+                   replace('Kong', 'China').
+                   replace('Leone', 'Sierra Leone').
+                   replace('Manitoba', 'Canada').
+                   replace('Salvador', 'El Salvador').
+                   replace('Herzegovina', 'Bosnia').
+                   replace('Hunary', 'Hungary').
+                   replace('Luqa', 'Malta').
+                   replace('Verde', 'Cabo Verde').
+                   replace('Surinam', 'Suriname').
+                   replace('Indian', 'India').
+                   replace('Cameroons', 'Cameroon').
+                   replace('Sirte', 'Libya').
+                   replace('Kazakistan', 'Kazakhstan').
+                   replace('Bugaria', 'Bulgaria').
+                   replace('Surinamee', 'Suriname').
+                   replace('Mexic', 'Mexico').
+                   replace('Tomé', 'Principe').
+                   replace('Principe', 'Principe'))
 
-print(set(states2))
+print(sorted(set(states2)))
 #%% md
 ##### Regno Unito
 #%%
-states_UK = ['UK', 'Wales', 'Scotland', 'Eire', 'Union', 'Kingdom', 'England']
+states_UK = ['UK', 'Wales', 'Scotland', 'Eire', 'Union', 'Kingdom', 'England', 'Caledonia', 'Man']
 states3 = []
 for state in states2:
     if state in states_UK:
-        states3.append('UK')
+        states3.append('United Kingdom')
     else:
         states3.append(state)
 
@@ -407,8 +481,237 @@ print(set(states3))
 #%%
 dataset = dataset.assign(States=states3)
 #%% md
+#### Elimino altre due osservazioni che non siamo riusciti a classificare
+#%%
+dataset = dataset[dataset.States != 'AK']
+dataset = dataset[dataset.States != 'Nag']
+dataset.States
+#%% md
+### Macro-aree
+#%% md
+#### Importiamo un dataset di supporto che ci permette di fare un match tra i paesi e i territori
+#%%
+continents_dataset = pd.read_csv("datasets/continents2.csv")
+continents_dataset
+#%%
+macro_aree = continents_dataset['sub-region'].unique()
+print(macro_aree)
+#%% md
+#### Creo la lista dei paesi per ogni macro-area
+#%%
+Southern_Asia = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Southern Asia').unique()
 
-###    Leo
+Northern_Europe = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Northern Europe').unique()
+
+Southern_Europe = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Southern Europe').unique()
+
+Northern_Africa = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Northern Africa').unique()
+
+Polynesia = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Polynesia').unique()
+
+Sub_Saharan_Africa = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Sub-Saharan Africa').unique()
+
+Latin_America = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Latin America and the Caribbean').unique()
+
+Western_Asia = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Western Asia').unique()
+
+Australia_and_Zealand = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Australia and New Zealand').unique()
+
+Western_Europe = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Western Europe').unique()
+
+Eastern_Europe = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Eastern Europe').unique()
+
+Northern_America = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Northern America').unique()
+
+South_Eastern_Asia = continents_dataset['name']._where(continents_dataset['sub-region'] == 'South-eastern Asia').unique()
+
+Eastern_Asia = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Eastern Asia').unique()
+
+Melanesia = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Melanesia').unique()
+
+Micronesia = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Micronesia').unique()
+
+Central_Asia = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Central Asia').unique()
+
+
+#print(Southern_Europe)
+#%% md
+#### Faccio un match per ogni zona tra gli stati del dataset e quelli del dataset di supporto
+#%%
+sub_regions = []
+for nation in dataset.States:
+    if nation in Southern_Asia:
+        sub_regions.append('Southern Asia')
+    elif nation in Northern_Europe:
+        sub_regions.append('Northern Europe')
+    elif nation in Southern_Europe:
+        sub_regions.append('Southern Europe')
+    elif nation in Northern_Africa:
+        sub_regions.append('Northern Africa')
+    elif nation in Polynesia:
+        sub_regions.append('Polynesia')
+    elif nation in Sub_Saharan_Africa:
+        sub_regions.append('Sub Saharan Africa')
+    elif nation in Latin_America:
+        sub_regions.append('Latin America and the Caribbean')
+    elif nation in Western_Asia:
+        sub_regions.append('Western Asia')
+    elif nation in Australia_and_Zealand:
+        sub_regions.append('Australia and Zealand')
+    elif nation in Western_Europe:
+        sub_regions.append('Western Europe')
+    elif nation in Eastern_Europe:
+        sub_regions.append('Eastern Europe')
+    elif nation in Northern_America:
+        sub_regions.append('Northern America')
+    elif nation in South_Eastern_Asia:
+        sub_regions.append('South Eastern Asia')
+    elif nation in Eastern_Asia:
+        sub_regions.append('Eastern Asia')
+    elif nation in Melanesia:
+        sub_regions.append('Melanesia')
+    elif nation in Micronesia:
+        sub_regions.append('Micronesia')
+    elif nation in Central_Asia:
+        sub_regions.append('Central Asia')
+    else: sub_regions.append(nation)
+
+print(sorted(set(sub_regions)))
+#%% md
+#### Classifico manualmente alcuni paesi che sono rimasti fuori dal match
+#%%
+sub_regions2 = []
+for sub in sub_regions:
+    sub_regions2.append(sub.replace('Timor', 'South Eastern Asia').
+                        replace('Sardinia', 'Southern Europe').
+                        replace('Chechnya', 'Western Asia').
+                        replace('Trinidad', 'Latin America and the Caribbean').
+                        replace('Bosnia and Herzegovina', 'Canada').
+                        replace('Borneo', 'South Eastern Asia').
+                        replace('Somaliland', 'Sub-Saharan Africa').
+                        replace('Brunei', 'South Eastern Asia').
+                        replace('Czechoslovakia', 'Eastern Europe').
+                        replace('Yugoslavia', 'Southern Europe').
+                        replace('Himalayas', 'Southern Asia').
+                        replace('Tasmania', 'Sub-Saharan Africa').
+                        replace('Tahiti', 'Australia and Zealand').
+                        replace('Rhodesia', 'Sub-Saharan Africa').
+                        replace('Kosovo', 'Southern Europe').
+                        replace('Korea', 'Eastern Asia').
+                        replace('Costa Costa Rica', 'Latin America and the Caribbean').
+                        replace('Bosnia', 'Southern Europe').
+                        replace('Principe', 'Sub-Saharan Africa').
+                        replace('Emirates', 'Western Asia').
+                        replace('Morroco', 'Northern Africa').
+                        replace('Democratic Republic of Congo', 'Sub-Saharan Africa').
+                        replace('Antilles', 'Latin America and the Caribbean'))
+
+print(sorted(set(sub_regions2)))
+#%% md
+#### Creo la nuova colonna con i sub_continenti
+#%%
+dataset = dataset.assign(Sub_Regions=sub_regions2)
+#%%
+dataset.Sub_Regions
+#%% md
+#### Infine controllo le ultime osservazioni che non sono utili ai fini dell'analisi
+#%%
+count_Africa = 0
+count_Base = 0
+count_channel = 0
+count_newfoundland = 0
+count_Ocean = 0
+count_Sea = 0
+count_sound = 0
+count_station = 0
+count_Territory = 0
+count_island = 0
+count_islands = 0
+count_airport = 0
+count_coast = 0
+count_gulf = 0
+count_republic = 0
+
+for i in sub_regions2:
+    if i == 'Africa':
+        count_Africa+=1
+    elif i == 'Base':
+        count_Base+=1
+    elif i == 'Channel':
+        count_channel+=1
+    elif i == 'Newfoundland':
+        count_newfoundland+=1
+    elif i == 'Ocean':
+        count_Ocean+=1
+    elif i == 'Sea':
+        count_Sea+=1
+    elif i == 'Sound':
+        count_sound+=1
+    elif i == 'Station':
+        count_station+=1
+    elif i == 'Territory':
+        count_Territory+=1
+    elif i == 'Island':
+        count_island+=1
+    elif i == 'Islands':
+        count_islands+=1
+    elif i == 'Airport':
+        count_airport+=1
+    elif i == 'Coast':
+        count_coast+=1
+    elif i == 'Gulf':
+        count_gulf+=1
+    elif i == 'Republic':
+        count_republic+=1
+
+
+print(
+    count_Africa,
+    count_Base,
+    count_channel,
+    count_newfoundland,
+    count_Ocean,
+    count_Sea,
+    count_sound,
+    count_station,
+    count_Territory,
+    count_island,
+    count_islands,
+    count_airport,
+    count_coast,
+    count_gulf,
+    count_republic
+)
+# Totale: 175
+#da eliminare sicuro: Territory, Station, Sound, Base, Channel, Newfoundland, gulf, airport, coast,
+# Valutare anche le altre, io eliminerei tutto tranne 'Africa' perché 1) 175 non sono troppe, 2) sono generiche e non è possibile avere una localizzazione geografica.
+#%% md
+#### E alcune decido di eliminarle (tutte tranne 'Africa')
+#%%
+dataset = dataset[dataset.Sub_Regions != 'Territory']
+dataset = dataset[dataset.Sub_Regions != 'Station']
+dataset = dataset[dataset.Sub_Regions != 'Sound']
+dataset = dataset[dataset.Sub_Regions != 'Base']
+dataset = dataset[dataset.Sub_Regions != 'Channel']
+dataset = dataset[dataset.Sub_Regions != 'Newfoundland']
+dataset = dataset[dataset.Sub_Regions != 'Ocean']
+dataset = dataset[dataset.Sub_Regions != 'Island']
+dataset = dataset[dataset.Sub_Regions != 'Islands']
+dataset = dataset[dataset.Sub_Regions != 'Airport']
+dataset = dataset[dataset.Sub_Regions != 'Coast']
+dataset = dataset[dataset.Sub_Regions != 'Gulf']
+dataset = dataset[dataset.Sub_Regions != 'Republic']
+#%%
+dataset.Sub_Regions
+#%% md
+#### Adesso vado a creare un'altra variabile che racchiude le macro-aree in continenti
+#%%
+dataset.Sub_Regions.unique()
+#%%
+
+#%% md
+
+#    Leo
 #%% md
 Change data format
 

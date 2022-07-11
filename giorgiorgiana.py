@@ -1,4 +1,3 @@
-
 #%%
 import pandas as pd
 import re
@@ -32,7 +31,7 @@ print(len(dataset['Operator'].unique()))
 
 military_flights = []
 
-military_words = ["army", "navy", "marine", "military", "force", "airforce", "amee de l'air"]
+military_words = ["army", "navy", "marine", "military", "force", "airforce", "amee de l'air", "mission"]
 
 # Identifica tutti i nomi degli operatori che appartengono al campo militare
 for operator in dataset['Operator'].unique():
@@ -51,7 +50,7 @@ Identificazione e raggruppamento categoria di operatore postale
 #%%
 postal_cargo_flights = []
 
-postal_e_cargo_words = ["postal", "mail", "aeropostale", "cargo", "express"]
+postal_e_cargo_words = ["postal", "mail", "aeropostale", "cargo", "express", "commercial"]
 
 # Identifica tutti i nomi degli operatori che appartengono al campo militare
 for operator in dataset['Operator'].unique():
@@ -87,8 +86,6 @@ for value in dataset.Operator:
         new_column.append("Private flights")
     else:
         new_column.append("Scheduled flight")
-#%% md
-## ambulance --> decidere se assegnare una macro categoria
 #%%
 dataset = dataset.assign(New_Operator_column=new_column)
 dataset
@@ -98,18 +95,18 @@ print(len(dataset.New_Operator_column.unique()))
 #### Cleaning colonna **Route**
 #%%
 print("numero di NaN nella colonna Time:",
-      len([i for i in dataset.Route if type(i) == float]))  # 774.. Non troppi, quindi da eliminare
+      len([i for i in dataset.Route if type(i) == float]))  # 770.. da gestire
 #%%
 rotte = []
 
-for route in dataset.Route:
+for position, route in enumerate(dataset.Route):
     if type(route) != float:
         rotte.append(route.split("-"))
     else:
         rotte.append(route)
 
 rotte_pulite = []
-for route in rotte:
+for position, route in enumerate(rotte):
     new_route = []
     if type(route) != float:
         for aeroport in route:
@@ -117,8 +114,10 @@ for route in rotte:
                 new_route.append(re.sub(f",.+", "", aeroport))
             else:
                 new_route.append(aeroport)
+    elif type(route) == float and dataset["New_Operator_column"].iloc[position] == "Military flight":
+        new_route.append("Informazione riservata")
     else:
-        new_route.append(route)
+        new_route.append("Sconosciuto")
     rotte_pulite.append(new_route)
 
 print(rotte_pulite)
@@ -672,6 +671,53 @@ nodes.add_nodes_from(dataset["Aeroporto_di_partenza"])
 #%%
 nx.draw(nodes)
 #%%
+test = nx.Graph()
+test.add_edge("a", "b")
+test.add_edge("b", "c")
+test.add_edge("c", "a")
 
+nx.draw(test)
+#%% md
+Ok bisogna creare un dizionario con tutti i nomi degli aeroporti come chiavi e come valori gli aeroporti con i quali sono collegati.
+#%% md
+Sistemare il codice facendo una funzione
 #%%
-print(dataset.columns)
+print(len(dataset_def["Aeroporto_di_partenza"].unique()))
+univ_aerop = [i for i in dataset_def["Aeroporto_di_partenza"].unique() if type(i) != float]
+
+for aer in dataset_def["Aeroporto_2"].unique():
+    if aer not in univ_aerop and type(aer) != float: univ_aerop.append(aer)
+
+for aer in dataset_def["Aeroporto_3"].unique():
+    if aer not in univ_aerop and type(aer) != float: univ_aerop.append(aer)
+
+for aer in dataset_def["Aeroporto_4"].unique():
+    if aer not in univ_aerop and type(aer) != float: univ_aerop.append(aer)
+
+for aer in dataset_def["Aeroporto_5"].unique():
+    if aer not in univ_aerop and type(aer) != float: univ_aerop.append(aer)
+
+for aer in dataset_def["Aeroporto_6"].unique():
+    if aer not in univ_aerop and type(aer) != float: univ_aerop.append(aer)
+
+for aer in dataset_def["Aeroporto_di_destinazione"].unique():
+    if aer not in univ_aerop and type(aer) != float: univ_aerop.append(aer)
+print(len(univ_aerop))
+#%% md
+#### Creazione dizionario
+#%% md
+Devo cercare tra le liste che contengono i vari aeroporti un aeroporto alla volta tra quelli di univ_aerop. Identificare in quale lista si trova e a che posizione in modo da trovare i due aeroporti che stanno subito prima o dopo di lui nella rotta. Poi inserirli in una lista che sarà inserita come valore in un dizionario in cui l'aeroporto inizialmente identificato risulti essere la chiave.
+#%%
+from collections import defaultdict
+
+diz_rout = defaultdict(list)
+
+
+
+for aer in univ_aerop:
+    for position, i in enumerate(dataset_def["Aeroporto_di_partenza"]):
+        if i == aer:
+            # print(dataset_def["Aeroporto_di_partenza"][position], dataset_def["Aeroporto_2"][position])
+            diz_rout[aer] += [dataset_def["Aeroporto_2"].iloc[position]]
+
+print(diz_rout)

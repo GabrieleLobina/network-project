@@ -1,5 +1,3 @@
-#%% md
-
 #%%
 import pandas as pd
 import re
@@ -88,8 +86,6 @@ for value in dataset.Operator:
         new_column.append("Private flights")
     else:
         new_column.append("Scheduled flight")
-#%% md
-## ambulance --> decidere se assegnare una macro categoria
 #%%
 dataset = dataset.assign(New_Operator_column=new_column)
 dataset
@@ -98,7 +94,7 @@ print(len(dataset.New_Operator_column.unique()))
 #%% md
 #### Cleaning colonna **Route**
 #%%
-print("numero di NaN nella colonna Time:",
+print("numero di NaN nella colonna Route:",
       len([i for i in dataset.Route if type(i) == float]))  # 770.. da gestire
 #%%
 rotte = []
@@ -973,13 +969,6 @@ nodes = nx.Graph()
 nodes.add_nodes_from(dataset["Aeroporto_di_partenza"])
 #%%
 nx.draw(nodes)
-#%%
-test = nx.Graph()
-test.add_edge("a", "b")
-test.add_edge("b", "c")
-test.add_edge("c", "a")
-
-nx.draw(test)
 #%% md
 Ok bisogna creare un dizionario con tutti i nomi degli aeroporti come chiavi e come valori gli aeroporti con i quali sono collegati.
 #%% md
@@ -1007,20 +996,112 @@ for aer in dataset_def["Aeroporto_di_destinazione"].unique():
     if aer not in univ_aerop and type(aer) != float: univ_aerop.append(aer)
 print(len(univ_aerop))
 #%% md
-#### Creazione dizionario
+#### Creazione lista di tuple
 #%% md
-Devo cercare tra le liste che contengono i vari aeroporti un aeroporto alla volta tra quelli di univ_aerop. Identificare in quale lista si trova e a che posizione in modo da trovare i due aeroporti che stanno subito prima o dopo di lui nella rotta. Poi inserirli in una lista che sarà inserita come valore in un dizionario in cui l'aeroporto inizialmente identificato risulti essere la chiave.
+Creare lista di tuple che contiene i nodi e i collegamenti tra di loro a due a due. In ogni tupla ci saranno due nodi, in ordine alfabetico in modo da evitare doppioni.
 #%%
-from collections import defaultdict
+edges = []
+for aeroport in univ_aerop:
+    if aeroport in aeroporto_partenza:
+        for position, i in enumerate(aeroporto_partenza):
+            if i == aeroport:
+                mini_edge = sorted([aeroport, aeroporto_2[position]])
+                if aeroporto_2[position] != "Nan" and mini_edge not in edges:
+                    edges.append(mini_edge)
+                elif aeroporto_2[position] == "Nan" and aeroporto_di_destinazione[position] != "Nan" and mini_edge not in edges:
+                    edges.append(mini_edge)
+    elif aeroport in aeroporto_2:
+        for position, i in enumerate(aeroporto_2):
+            if i == aeroport:
+                mini_edge = sorted([aeroport, aeroporto_3[position]])
+                if aeroporto_3[position] != "Nan" and mini_edge not in edges:
+                    edges.append(mini_edge)
+                elif aeroporto_3[position] == "Nan" and aeroporto_di_destinazione[position] != "Nan" and mini_edge not in edges:
+                    edges.append(mini_edge)
+    elif aeroport in aeroporto_3:
+        for position, i in enumerate(aeroporto_3):
+            if i == aeroport:
+                mini_edge = sorted([aeroport, aeroporto_4[position]])
+                if aeroporto_4[position] != "Nan" and mini_edge not in edges:
+                    edges.append(mini_edge)
+                elif aeroporto_4[position] == "Nan" and aeroporto_di_destinazione[position] != "Nan" and mini_edge not in edges:
+                    edges.append(mini_edge)
+    elif aeroport in aeroporto_4:
+        for position, i in enumerate(aeroporto_4):
+            if i == aeroport:
+                mini_edge = sorted([aeroport, aeroporto_5[position]])
+                if aeroporto_5[position] != "Nan" and mini_edge not in edges:
+                    edges.append(mini_edge)
+                elif aeroporto_5[position] == "Nan" and aeroporto_di_destinazione[position] != "Nan" and mini_edge not in edges:
+                    edges.append(mini_edge)
+    elif aeroport in aeroporto_5:
+        for position, i in enumerate(aeroporto_5):
+            if i == aeroport:
+                mini_edge = sorted([aeroport, aeroporto_6[position]])
+                if aeroporto_6[position] != "Nan" and mini_edge not in edges:
+                    edges.append(mini_edge)
+                elif aeroporto_6[position] == "Nan" and aeroporto_di_destinazione[position] != "Nan" and mini_edge not in edges:
+                    edges.append(mini_edge)
+    elif aeroport in aeroporto_6:
+        for position, i in enumerate(aeroporto_6):
+            if i == aeroport:
+                mini_edge = sorted([aeroport, aeroporto_di_destinazione[position]])
+                if aeroporto_di_destinazione[position] != "Nan" and mini_edge not in edges:
+                    edges.append(mini_edge)
+                elif aeroporto_di_destinazione[position] == "Nan" and aeroporto_di_destinazione[position] != "Nan" and mini_edge not in edges:
+                    edges.append(mini_edge)
+    elif aeroport in aeroporto_di_destinazione:
+        for position, i in enumerate(aeroporto_di_destinazione):
+            if i == aeroport:
+                mini_edge = sorted([aeroport, aeroporto_di_destinazione[position]])
+                if aeroporto_6[position] != "Nan":
+                    edges.append(mini_edge)
+                elif aeroporto_5[position] != "Nan":
+                    edges.append(mini_edge)
+                elif aeroporto_4[position] != "Nan":
+                    edges.append(mini_edge)
+                elif aeroporto_3[position] != "Nan":
+                    edges.append(mini_edge)
+                elif aeroporto_2[position] != "Nan":
+                    edges.append(mini_edge)
 
-diz_rout = defaultdict(list)
 
+print(edges)
+#%%
+# class Graph(object):
+#     def __init__(self):
+#         self.nodes = {}
+#
+#     def V(self):
+#         return self.nodes.keys()
+#
+#     def size(self):
+#         return len(self.nodes)
+#
+#     def adj(self, u):
+#         if u in self.nodes:
+#             return self.nodes[u]
+#
+#     def insertNode(self, u):
+#         if u not in self.nodes: self.nodes[u] = {}
+#
+#     def insertEdge(self, u, v, w=0):
+#         self.insertNode(u)
+#         self.insertNode(v)
+#         self.nodes[u][v] = w
+#
+# g = Graph()
+#
+# for u, v in edges:
+#     g.insertEdge(u, v)
+#
+# for u in g.V():
+#     print(u, "->", g.adj(u))
+#
+# nx.draw(g.nodes)
 
+gg = nx.Graph()
+gg.add_edges_from(edges[:45])
 
-for aer in univ_aerop:
-    for position, i in enumerate(dataset_def["Aeroporto_di_partenza"]):
-        if i == aer:
-            # print(dataset_def["Aeroporto_di_partenza"][position], dataset_def["Aeroporto_2"][position])
-            diz_rout[aer] += [dataset_def["Aeroporto_2"].iloc[position]]
-
-print(diz_rout)
+nx.draw(gg, with_labels=True, font_weight='bold')
+#%%

@@ -13,7 +13,6 @@ dataset = pd.read_csv("datasets/Airplane_Crashes_and_Fatalities_Since_1908_20190
 dataset
 #%%
 continents_dataset = pd.read_csv("datasets/continents2.csv")
-#%%
 cities_dataset = pd.read_csv("datasets/cities.csv")
 #%% md
 ---
@@ -115,23 +114,29 @@ for position, route in enumerate(rotte):
     if type(route) != float:
         for aeroport in route:
             if "," in aeroport:
-                new_route.append(re.sub(f",.+", "", aeroport))
+                new_route.append(re.sub(f",.+", "", aeroport.strip()))
+            elif "-" in aeroport:
+                a = re.sub(f"-", " ", aeroport.strip())
+                new_route.append(" ".join(a.split()))
+            elif aeroport[0] == " ":
+                new_route.append(aeroport[1:])
+                new_route.append(aeroport.strip())
             else:
-                new_route.append(aeroport)
+                new_route.append(aeroport.strip())
     elif type(route) == float and dataset["New_Operator_column"].iloc[position] == "Military flight":
         new_route.append("Informazione riservata")
     else:
         new_route.append("Sconosciuto")
     rotte_pulite.append(new_route)
 
-print(rotte_pulite)
+# print(rotte_pulite)
 #%% md
 #### Aggiunta colonna Aeroporto_di_partenza
 #%%
 # Aggiunta colonna Aeroporto_di_partenza
+
 aeroporto_partenza = [aeroporto[0] for aeroporto in rotte_pulite]
 dataset = dataset.assign(Aeroporto_di_partenza=aeroporto_partenza)
-
 dataset
 #%% md
 #### Aggiunta colonne per aeroporti intermedi
@@ -214,8 +219,6 @@ dataset = dataset.assign(Aeroporto_2=aeroporto_2,
 dataset
 #%% md
 ### Cleaning AC type
-#%% md
-Ricordarsi di agiungere un .upper anche dopo il primo else una volta che abbiamo deciso di eliminare gli Na
 #%%
 # Prima pulizia
 
@@ -346,8 +349,6 @@ print(count)
 #%%
 list_of_states_cleaned = dataset.state_location.unique()
 print(list_of_states_cleaned)
-#%%
-
 #%%
 USA_states = ['Virginia', 'Jersey', 'Ohio', 'Pennsylvania', 'Illinois', 'Maryland', 'Kent', 'Indiana', 'Iowa',
               'Columbia', 'Wyoming', 'Minnisota', 'Wisconsin', 'Nevada', 'NY', 'WY', 'States', 'York', 'Utah', 'Oregon',
@@ -487,7 +488,6 @@ dataset.States
 #%% md
 #### Importiamo un dataset di supporto che ci permette di fare un match tra i paesi e i territori
 #%%
-
 continents_dataset
 #%%
 macro_aree = continents_dataset['sub-region'].unique()
@@ -1055,13 +1055,12 @@ test.add_edge("a", "b")
 test.add_edge("b", "c")
 test.add_edge("c", "a")
 
-nx.draw(test)
+nx.draw(test, with_labels=True)
 #%% md
 Ok bisogna creare un dizionario con tutti i nomi degli aeroporti come chiavi e come valori gli aeroporti con i quali sono collegati.
 #%% md
 Sistemare il codice facendo una funzione
 #%%
-print(len(dataset_def["Aeroporto_di_partenza"].unique()))
 univ_aerop = [i for i in dataset_def["Aeroporto_di_partenza"].unique() if type(i) != float]
 
 for aer in dataset_def["Aeroporto_2"].unique():
@@ -1082,6 +1081,22 @@ for aer in dataset_def["Aeroporto_6"].unique():
 for aer in dataset_def["Aeroporto_di_destinazione"].unique():
     if aer not in univ_aerop and type(aer) != float: univ_aerop.append(aer)
 print(len(univ_aerop))
+#%%
+univ_aeropollo = []
+for i in univ_aerop:
+    # print(i)
+    univ_aeropollo.append(re.sub(rf"[^\w\s]", "", i).strip())
+    # if a != i: print(i, a)
+
+univ_aerop_puliti=[]
+for i in univ_aeropollo:
+    univ_aerop_puliti.append(re.sub(rf"[a-zA-Z]+/g","",i.strip()))
+leoncino_airport=[]
+for i in univ_aerop_puliti:
+    leoncino_airport.append(re.sub(rf"\d", "", i).strip())
+
+
+print(len(leoncino_airport))
 #%% md
 #### Creazione lista di tuple
 #%% md
@@ -1210,12 +1225,12 @@ import random
 
 gg = nx.Graph()
 
-bubu = []
-for i in edges:
-    if "Paris" in i: bubu.append(i)
-gg.add_edges_from(bubu)
+# bubu = []
+# for i in edges:
+#     if "Paris" in i: bubu.append(i)
+gg.add_edges_from(edges[:250])
 
-figure(figsize=(25, 25), dpi=30)
+figure(figsize=(25, 25), dpi=300)
 nx.draw(gg, with_labels=True, font_weight='bold', pos=nx.spring_layout(gg))
 plt.show()
 #%%
@@ -1224,3 +1239,12 @@ b_graph = nx.Graph()
 # new = pd.DataFrame(dataset_def["States"], dataset_def["New_Operator_column"])
 # new
 nx.from_pandas_edgelist(dataset_def, dataset_def["States"], dataset_def["New_Operator_column"])
+#%%
+new_graph = nx.Graph()
+
+[i, dataset_def["AC_Type_simplified"].iloc[position]] for position, i in enumerate(dataset_def["Aeroporto_di_partenza"][:200]) if dataset_def["AC_Type_simplified"].iloc[position] == ""]
+
+new_graph.add_edges_from([[i, dataset_def["AC_Type_simplified"].iloc[position]] for position, i in enumerate(dataset_def["Aeroporto_di_partenza"][:200])])
+
+figure(figsize=(25, 25), dpi=300)
+nx.draw(new_graph, with_labels=True)

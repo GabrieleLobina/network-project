@@ -14,6 +14,7 @@ dataset
 #%%
 continents_dataset = pd.read_csv("datasets/continents2.csv")
 cities_dataset = pd.read_csv("datasets/cities.csv")
+world_cities_dataset = pd.read_csv("datasets/cities.csv")
 #%% md
 ---
 ---
@@ -137,6 +138,7 @@ for position, route in enumerate(rotte):
 
 aeroporto_partenza = [aeroporto[0] for aeroporto in rotte_pulite]
 dataset = dataset.assign(Aeroporto_di_partenza=aeroporto_partenza)
+
 dataset
 #%% md
 #### Aggiunta colonne per aeroporti intermedi
@@ -767,9 +769,18 @@ print(tmp_cities)
 #%%
 tmp_cities_cleaned = []
 for i in tmp_cities:
-    tmp_cities_cleaned.append(re.sub(rf"[^\w\s]", "", i))
+    tmp_cities_cleaned.append(re.sub(rf"[^\w\s]", "", i).strip())
 
 print(tmp_cities_cleaned)
+#%%
+leo_city = []
+leoncino=[]
+for i in tmp_cities_cleaned:
+    leo_city.append(re.sub(rf"[a-zA-Z]+/g", "", i))
+for i in leo_city:
+    leoncino.append(re.sub(rf"\d", "", i).strip())
+
+print(sorted(set(leoncino)))
 #%%
 print(len(sorted(set(tmp_cities_cleaned))))
 print(sorted(set(tmp_cities_cleaned)))
@@ -1029,9 +1040,10 @@ dataset.keys()
 #%% md
 # Eliminazione Variabili (maic)
 #%%
+dataset
+#%%
 
-col_to_del = ['Date', 'Time', 'Location', 'Flight #', 'Registration', 'cn/ln', 'state_location', 'Ac Type', 'Route',
-              'Fatalities', 'Fatalities Crew', 'Fatalities Passangers', 'Grounds']
+col_to_del = ['Date', 'Time', 'Location', 'Flight #', 'Registration', 'cn/ln', 'state_location', 'Ac Type', 'Route', 'Fatalities', 'Fatalities Crew', 'Fatalities Passangers', 'Grounds']
 
 dataset_def = dataset
 for col in dataset_def.columns:
@@ -1039,6 +1051,171 @@ for col in dataset_def.columns:
         dataset_def = dataset_def.drop(col, axis=1)
 
 dataset_def
+#%% md
+## Grafici Maic
+#%%
+plt.hist(dataset['Fatalities Passangers'], alpha=0.8, bins=100 , histtype='bar', color='blue',ec='white')
+#%%
+sb.displot(dataset, x="Fatalities Crew", binwidth=0.5)
+#%%
+sb.kdeplot('Fatalities', data=dataset, shade=True)
+sb.set_style("white")
+sb.despine()
+#%%
+sb.displot(dataset, x="Aboard Passangers", binwidth=10)
+#%%
+plt.hist(dataset['Aboard Crew'], alpha=0.8, bins=100 , histtype='bar', color='blue',ec='white')
+#%%
+sb.kdeplot('Aboard', data=dataset, shade=True)
+sb.set_style("white")
+sb.despine()
+#%%
+# x = dataset.loc[:, ['new_fat']]
+# dataset['new_fat'] = (x - x.mean())/x.std()
+# dataset['colors'] = ['red' if x < 0 else 'green' for x in dataset['new_fat']]
+# dataset.sort_values('new_fat', inplace=True)
+# dataset.reset_index(inplace=True)
+#
+# # Draw plot
+# plt.figure(figsize=(14,10), dpi= 80)
+# plt.hlines(y=dataset.index, xmin=0, xmax=dataset.mpg_z, color=dataset.colors, alpha=0.4, linewidth=5)
+#
+# # Decorations
+# plt.gca().set(ylabel='$Sub_Regions$', xlabel='$new_fat$')
+# plt.yticks(dataset.index, dataset., fontsize=12)
+# plt.title('Diverging Bars of Car Mileage', fontdict={'size':20})
+# plt.grid(linestyle='--', alpha=0.5)
+# plt.show()
+#%%
+#sb.countplot(x ='Continent',data = dataset_def)
+#%%
+
+#%%
+# fig, ax = plt.subplots() # Create the figure and axes object
+#
+# # Plot the first x and y axes:
+# dataset_def.plot(x = 'Sub_Regions', y = 'new_crew', ax = ax)
+#%%
+# # Prepare Data
+# df = dataset_def[['Continent', 'new_fat']].groupby('new_fat').apply(lambda x: x.mean())
+# df.sort_values('Continent', inplace=True)
+# df.reset_index(inplace=True)
+#
+# # Draw plot
+# import matplotlib.patches as patches
+#
+# fig, ax = plt.subplots(figsize=(16,10), facecolor='white', dpi= 80)
+# ax.vlines(x=df.index, ymin=0, ymax=df.Sub_Regions, color='firebrick', alpha=0.7, linewidth=20)
+#
+# # Annotate Text
+# for i, sub in enumerate(df.Sub_Regions):
+#     ax.text(i, sub+0.5, round(sub, 1), horizontalalignment='center')
+#
+#
+# # Title, Label, Ticks and Ylim
+# ax.set_title('Bar Chart for Fatalities', fontdict={'size':22})
+# ax.set(ylabel='Number of deaths for sub regions', ylim=(0, 30))
+# plt.xticks(df.index, df.new_fat.str.upper(), rotation=60, horizontalalignment='right', fontsize=12)
+#
+# # Add patches to color the X axis labels
+# p1 = patches.Rectangle((.57, -0.005), width=.33, height=.13, alpha=.1, facecolor='green', transform=fig.transFigure)
+# p2 = patches.Rectangle((.124, -0.005), width=.446, height=.13, alpha=.1, facecolor='red', transform=fig.transFigure)
+# fig.add_artist(p1)
+# fig.add_artist(p2)
+# plt.show()
+#%%
+# # Load Dataset
+# #titanic = sb.load_dataset(dataset_def)
+#
+# # Plot
+# g = sb.catplot("new_fat", col="Continent", col_wrap=4,
+#                 data=dataset_def,
+#                 kind="count", height=3.5, aspect=.8,
+#                 palette='tab20')
+#
+# fig.suptitle('sf')
+# plt.show()
+#%% md
+## Estrazione città da Aeroporto di partenza
+
+#%%
+dataset_def
+#%%
+dataset_def.Aeroporto_di_partenza.unique()
+#%%
+aerop_matched = []
+aerop_not_matched = []
+for aerop in dataset_def.Aeroporto_di_partenza:
+    if aerop in world_cities_dataset.name.unique():
+        aerop_matched.append(aerop)
+    elif aerop == 'Demonstration':
+        aerop_matched.append(aerop)
+    elif aerop == 'Test flight':
+        aerop_matched.append(aerop)
+    elif aerop == 'Sconosciuto':
+        aerop_matched.append(aerop)
+    elif aerop == 'Informazione riservata':
+        aerop_matched.append(aerop)
+    elif aerop == 'Military exercise':
+        aerop_matched.append(aerop)
+    elif aerop == 'Exercises':
+        aerop_matched.append(aerop)
+    elif aerop == 'Test':
+        aerop_matched.append(aerop)
+    elif aerop == 'Test Flight':
+        aerop_matched.append(aerop)
+    elif aerop in cities_dataset.name.unique():
+        aerop_matched.append(aerop)
+    elif aerop in dataset_def.States.unique():
+        aerop_matched.append(aerop)
+    else: aerop_not_matched.append(aerop)
+
+print(f'città matchate: {len(aerop_matched)}')
+print(f'città NON matchate: {len(aerop_not_matched)}')
+#%%
+print(len(set(aerop_matched)))
+#%%
+dataset_test = dataset_def
+dataset_test
+#%%
+aerop_not_matched
+#%%
+for i in dataset_test.Aeroporto_di_partenza:
+    if i in aerop_not_matched:
+        dataset_test = dataset_test[dataset_test.Aeroporto_di_partenza != i]
+#%%
+dataset_test
+#%% md
+#### STEMMING (NON Utilizzato)
+#%%
+from nltk.stem import PorterStemmer
+stemmer = PorterStemmer()
+#%%
+stemmed_cities = [stemmer.stem(city) for city in world_cities_dataset.name.unique()]
+stemmed_aerop = [stemmer.stem(city) for city in aerop_not_matched]
+#%%
+aerop_matched_stemm = []
+aerop_not_matched_stemm = []
+for aerop in aerop_not_matched:
+    if aerop in stemmed_cities:
+        aerop_matched_stemm.append(aerop)
+    else: aerop_not_matched_stemm.append(aerop)
+#%%
+print(f'città matchate stemming: {len(aerop_matched_stemm)}')
+print(f'città NON matchate stemming: {len(aerop_not_matched_stemm)}')
+#%%
+aerop_matched_stemm_ = []
+aerop_not_matched_stemm_ = []
+for aerop in stemmed_aerop:
+    if aerop in stemmed_cities:
+        aerop_matched_stemm_.append(aerop)
+    else: aerop_not_matched_stemm_.append(aerop)
+
+#%%
+print(f'città matchate stemming: {len(aerop_matched_stemm_)}')
+print(f'città NON matchate stemming: {len(aerop_not_matched_stemm_)}')
+#%%
+print(len(set(aerop_not_matched_stemm_)))
 #%% md
 # Grafi (Gabro)
 #%%
@@ -1187,6 +1364,10 @@ for aeroport in univ_aerop:
 
 
 # print(edges)
+#%%
+
+#%% md
+
 #%%
 # class Graph(object):
 #     def __init__(self):

@@ -31,7 +31,7 @@ print(dataset.shape)
 #%% md
 Identificazione e raggruppamento categoria di operatore militare
 #%%
-print(len(dataset['Operator'].unique()))
+print("numero di operatori univoci:", len(dataset['Operator'].unique()))
 
 military_flights = []
 
@@ -40,13 +40,8 @@ military_words = ["army", "navy", "marine", "military", "force", "airforce", "am
 # Identifica tutti i nomi degli operatori che appartengono al campo militare
 for operator in dataset['Operator'].unique():
     for word in military_words:
-        if word.lower() in operator.lower() and operator not in military_flights: military_flights.append(operator)
-
-# Identifica tutti i nomi degli operatori che in Route hanno Test flight e Test presumendo che si trattino anche essi di voli militari
-test_flights = ["Test", "Test flight"]
-for position, operator in enumerate(dataset['Operator']):
-    if dataset.Route.iloc[position] in test_flights and operator not in military_flights: military_flights.append(
-        operator)
+        if word.lower() in operator.lower() and operator not in military_flights:
+            military_flights.append(operator)
 
 print("numero di operatori militari univoci:", len(military_flights))  # 251 valori univoci relativi
 #%% md
@@ -138,7 +133,6 @@ for position, route in enumerate(rotte):
 
 aeroporto_partenza = [aeroporto[0] for aeroporto in rotte_pulite]
 dataset = dataset.assign(Aeroporto_di_partenza=aeroporto_partenza)
-
 dataset
 #%% md
 #### Aggiunta colonne per aeroporti intermedi
@@ -773,15 +767,6 @@ for i in tmp_cities:
 
 print(tmp_cities_cleaned)
 #%%
-leo_city = []
-leoncino=[]
-for i in tmp_cities_cleaned:
-    leo_city.append(re.sub(rf"[a-zA-Z]+/g", "", i))
-for i in leo_city:
-    leoncino.append(re.sub(rf"\d", "", i).strip())
-
-print(sorted(set(leoncino)))
-#%%
 print(len(sorted(set(tmp_cities_cleaned))))
 print(sorted(set(tmp_cities_cleaned)))
 #%%
@@ -1228,11 +1213,25 @@ nodes.add_nodes_from(dataset["Aeroporto_di_partenza"])
 nx.draw(nodes)
 #%%
 test = nx.Graph()
-test.add_edge("a", "b")
-test.add_edge("b", "c")
-test.add_edge("c", "a")
+test.add_edge("a", "b", weight=3)
+test.add_edge("b", "c", weight=10)
+test.add_edge("c", "a", weight=3)
 
-nx.draw(test, with_labels=True)
+pos = nx.spring_layout(test, seed=7)  # positions for all nodes - seed for reproducibility
+
+# nodes
+nx.draw_networkx_nodes(test, pos, node_size=700)
+
+# edges
+nx.draw_networkx_edges(test, pos, width=6)
+nx.draw_networkx_edges(
+    test, pos, width=6, alpha=0.5, edge_color="b"
+)
+
+# node labels
+nx.draw_networkx_labels(test, pos, font_size=30)
+#%%
+dataset_def
 #%% md
 Ok bisogna creare un dizionario con tutti i nomi degli aeroporti come chiavi e come valori gli aeroporti con i quali sono collegati.
 #%% md
@@ -1258,22 +1257,6 @@ for aer in dataset_def["Aeroporto_6"].unique():
 for aer in dataset_def["Aeroporto_di_destinazione"].unique():
     if aer not in univ_aerop and type(aer) != float: univ_aerop.append(aer)
 print(len(univ_aerop))
-#%%
-univ_aeropollo = []
-for i in univ_aerop:
-    # print(i)
-    univ_aeropollo.append(re.sub(rf"[^\w\s]", "", i).strip())
-    # if a != i: print(i, a)
-
-univ_aerop_puliti=[]
-for i in univ_aeropollo:
-    univ_aerop_puliti.append(re.sub(rf"[a-zA-Z]+/g","",i.strip()))
-leoncino_airport=[]
-for i in univ_aerop_puliti:
-    leoncino_airport.append(re.sub(rf"\d", "", i).strip())
-
-
-print(len(leoncino_airport))
 #%% md
 #### Creazione lista di tuple
 #%% md
@@ -1364,10 +1347,8 @@ for aeroport in univ_aerop:
 
 
 # print(edges)
-#%%
-
 #%% md
-
+### Estrazione macro aree per gli aeroporti
 #%%
 # class Graph(object):
 #     def __init__(self):
@@ -1415,17 +1396,66 @@ figure(figsize=(25, 25), dpi=300)
 nx.draw(gg, with_labels=True, font_weight='bold', pos=nx.spring_layout(gg))
 plt.show()
 #%%
-b_graph = nx.Graph()
+""" Codice per fare grafi """
 
-# new = pd.DataFrame(dataset_def["States"], dataset_def["New_Operator_column"])
-# new
-nx.from_pandas_edgelist(dataset_def, dataset_def["States"], dataset_def["New_Operator_column"])
+from collections import defaultdict
+
+# SCEGLIERE LE COLONNE DA INCROCIARE E INSERIRLE AL POSTO DI "Continent", "AC_Type_simplified", edge_attr="Continent"
+new_graph = nx.from_pandas_edgelist(dataset_def, "Continent", "AC_Type_simplified", edge_attr="Continent",
+                                    create_using=nx.MultiGraph)
+
+# DEGREE DEI NODI ORIGINARIO
+deg = [name[0] for name in new_graph.degree]
+
+# MODIFICA DEGREE
+new_node_degree = defaultdict(int)
+
+for position, n in enumerate(dataset_def["Continent"]):
+    new_node_degree[n] += 0.05 * dataset_def["new_fat"].iloc[position]
+
+# SE NON VOGLIAMO METTERE IL PESO A TUTTI I NODI
+for i in deg:
+    if not i in new_node_degree:
+        new_node_degree[i] = 0
+#
+new_node_degree = [int(v) for v in new_node_degree.values()]
+
+
+# LAYOUT
+pos_norm = nx.kamada_kawai_layout(new_graph)
+
+# CREAZIONE GRAFO
+figure(figsize=(20, 15), dpi=80)
+nx.draw(new_graph, with_labels=False, node_size=new_node_degree, edge_color="yellow",
+        node_color="orange", pos=pos_norm)
+
+# SELEZIONE LABELS DA MOSTRARE
+labels = {}
+for node in new_graph.nodes():
+    if node in dataset_def["Continent"].unique():  # indicare la colonna da utilizzare per i labels
+        labels[node] = node
+
+nx.draw_networkx_labels(new_graph, pos_norm, labels, font_size=10)
+plt.show()
 #%%
-new_graph = nx.Graph()
+new_graph = nx.from_pandas_edgelist(dataset_def, "AC_Type_simplified", "Sub_Regions", edge_attr='Sub_Regions',
+                                    create_using=nx.MultiGraph)
 
-[i, dataset_def["AC_Type_simplified"].iloc[position]] for position, i in enumerate(dataset_def["Aeroporto_di_partenza"][:200]) if dataset_def["AC_Type_simplified"].iloc[position] == ""]
+figure(figsize=(15, 10), dpi=80)
 
-new_graph.add_edges_from([[i, dataset_def["AC_Type_simplified"].iloc[position]] for position, i in enumerate(dataset_def["Aeroporto_di_partenza"][:200])])
+# node_size = []
+# for i in new_graph.degree:
+#     node_size.append(dataset_def["new_fat"][dataset_def["Sub_Regions"] == i[0]])
+#
+# print(node_size)
 
-figure(figsize=(25, 25), dpi=300)
-nx.draw(new_graph, with_labels=True)
+# node_size = [v[1] for v in new_graph.degree]
+nx.draw(new_graph, with_labels=False,
+        node_size=dataset_def["new_fat"].values.tolist(), edge_color="yellow",
+        node_color="orange")
+#
+#
+# pos_norm = nx.kamada_kawai_layout(new_graph)
+#
+# node_labels = nx.draw_networkx_labels(new_graph, pos_norm, labels=dataset_def["Sub_Regions"].unique(), font_size=10, font_color='k')
+#%%

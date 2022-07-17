@@ -1,3 +1,7 @@
+#%% md
+# Airplane_Crashes network
+#%% md
+###### Installazione importazioni librerie
 #%%
 import pandas as pd
 import re
@@ -6,77 +10,164 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.axes as axes
 import math
-#!{sys.executable} -m pip install seaborn
 import seaborn as sb
+#%% md
+#### Importazione e osservazione dataset Airplane_crashes
+
 #%%
 dataset = pd.read_csv("datasets/Airplane_Crashes_and_Fatalities_Since_1908_20190820105639.csv")
 dataset
+#%% md
+##### Importazione dataset che utilizzeremo successivamente
 #%%
 continents_dataset = pd.read_csv("datasets/continents2.csv")
 cities_dataset = pd.read_csv("datasets/cities.csv")
-world_cities_dataset = pd.read_csv("datasets/cities.csv")
+world_cities_dataset = pd.read_csv("datasets/world-cities.csv")
 #%% md
----
----
-# Gabro
+#### Prime rappresentazioni grafiche
 #%% md
-#### Cleaning colonna **Operator**
+##### In questa griglia vengono rappresentante le distribuzioni di :
+##### Fatalities - Aboard - Fatalities Crew - Fatalities Passangers
 #%%
-print("numero di Na:", len([i for i in dataset.Operator if type(i) == float]))  # abbiamo solo 10 Na
-print(dataset.shape)
+fig, axes = plt.subplots(2, 2, figsize=(20, 12))
+plt.grid()
+axes[0, 0].hist(dataset['Fatalities'])
+axes[0, 0].set_xlabel('Fatalities')
+axes[0, 0].set_ylabel('Count')
+axes[0, 0].set_title('Fatalities')
 
-# Eliminazione righe contenenti Na nella colonna Operator
-dataset = dataset[dataset['Operator'].notna()]
-print(dataset.shape)
+axes[0, 1].hist(dataset['Aboard'], bins=15,color="pink")
+plt.grid()
+axes[0, 1].set_xlabel('Aboard')
+axes[0, 1].set_ylabel('Count')
+axes[0, 1].set_title('Aboard')
+
+# first two is using a matplotlib syntax, the next two I'll do with seaborn
+
+axes[1, 0].set_title('Fatalities Crew')
+plt.grid()
+sb.histplot(dataset, x='Fatalities Crew', ax=axes[1, 0], kde=True,color="darkgreen")
+axes[1, 0].set_xlabel('Fatalities Crew')
+axes[1, 0].set_ylabel('Count')
+
+axes[1, 1].set_title('Fatalities Passangers')
+plt.grid()
+sb.histplot(dataset, x='Fatalities Passangers', ax=axes[1, 1], kde=True,color="grey")
+axes[1, 1].set_xlabel('Fatalities Passangers')
+axes[1, 1].set_ylabel('Count')
+plt.tight_layout(pad=2)
+plt.show()
 #%% md
-Identificazione e raggruppamento categoria di operatore militare
+## Pulizia dataset Airplane_crashes
+#%% md
+#### Eliminazione variabili poco rilevanti
 #%%
-print("numero di operatori univoci:", len(dataset['Operator'].unique()))
+col_trash = ['Flight #','Registration','cn/ln','Summary','Time']
+
+dataset_1st = dataset
+for col in dataset_1st.columns:
+    if col in col_trash:
+        dataset_1st = dataset_1st.drop(col, axis=1)
+
+dataset_1st
+#%% md
+#### Osservazione presenza Na e gestione degli Na
+#%% md
+###### Cleaning colonna **Operator**
+#%%
+print("numero di Na:", len([i for i in dataset_1st.Operator if type(i) == float]))  # abbiamo solo 10 Na
+print(dataset_1st.shape)
+# Eliminazione righe contenenti Na nella colonna Operator
+dataset_1st = dataset_1st[dataset_1st['Operator'].notna()]
+print(dataset_1st.shape)
+#%%
+print("numero di NaN nella colonna Route:",
+      len([i for i in dataset_1st.Route if type(i) == float]))  # 770.. da gestire
+#%% md
+##### Controllo valori nulli delle colonne:
+- Aboard
+- Aboard Crew
+- Aboard Passangers
+- Fatalities
+- Fatalities Crew
+- Fatalities Passangers
+- Ground
+#%%
+def na_counter_for_numeric_column(column, nome_colonna):
+    nas = []
+    for value in column:
+        try:
+            int(value)
+        except:
+            nas.append(value)
+    return print(f"Numero di Na della colonna {nome_colonna}: {len(nas)}")
+
+
+na_counter_for_numeric_column(dataset_1st["Aboard"], "Aboard")
+na_counter_for_numeric_column(dataset_1st["Aboard Crew"], "Aboard Crew")
+na_counter_for_numeric_column(dataset_1st["Aboard Passangers"], "Aboard Passangers")
+na_counter_for_numeric_column(dataset_1st["Fatalities"], "Fatalities")
+na_counter_for_numeric_column(dataset_1st["Fatalities Crew"], "Fatalities Crew")
+na_counter_for_numeric_column(dataset_1st["Fatalities Passangers"], "Fatalities Passangers")
+na_counter_for_numeric_column(dataset_1st["Ground"], "Ground")
+#%% md
+##### Check degli NA nella colonna Location
+
+#%%
+print("numero di NaN nella colonna Location:", len([i for i in dataset.Location if type(i) == float]))  # Non abbiamo NA
+#%% md
+### Gestione variabili e creazione nuove variabili per implementare l’analisi
+#%% md
+#### Identificazione e raggruppamento categoria di operatore militare
+#%%
+print("numero di operatori univoci:", len(dataset_1st['Operator'].unique()))
 
 military_flights = []
 
 military_words = ["army", "navy", "marine", "military", "force", "airforce", "amee de l'air", "mission"]
 
 # Identifica tutti i nomi degli operatori che appartengono al campo militare
-for operator in dataset['Operator'].unique():
+for operator in dataset_1st['Operator'].unique():
     for word in military_words:
         if word.lower() in operator.lower() and operator not in military_flights:
             military_flights.append(operator)
 
 print("numero di operatori militari univoci:", len(military_flights))  # 251 valori univoci relativi
 #%% md
-Identificazione e raggruppamento categoria di operatore postale
+#### Identificazione e raggruppamento categoria di operatore postale
 #%%
 postal_cargo_flights = []
 
 postal_e_cargo_words = ["postal", "mail", "aeropostale", "cargo", "express", "commercial"]
 
 # Identifica tutti i nomi degli operatori che appartengono al campo militare
-for operator in dataset['Operator'].unique():
+for operator in dataset_1st['Operator'].unique():
     if type(operator) != float:
         for word in postal_e_cargo_words:
             if word.lower() in operator.lower() and operator not in postal_cargo_flights: postal_cargo_flights.append(
                 operator)
 
 print("numero di operatori postali/cargo univoci:", len(postal_cargo_flights))
+#%% md
+#### Identificazione e raggruppamento categoria di operatori privati
 #%%
 private_flights = []
 
 private_words = ["priva"]
 
 # Identifica tutti i nomi degli operatori che appartengono al campo militare
-for operator in dataset['Operator'].unique():
+for operator in dataset_1st['Operator'].unique():
     if type(operator) != float:
         for word in private_words:
             if word.lower() in operator.lower() and operator not in private_flights: private_flights.append(operator)
 
-print("numero di operatori postali/cargo univoci:", len(private_flights))
+print("numero di operatori privati:", len(private_flights))
 #%% md
-#### Aggiunta valori per la nuova colonna
+#### Aggiunta valori per le nuove colonne
 #%%
 new_column = []
 
-for value in dataset.Operator:
+for value in dataset_1st.Operator:
     if value in military_flights:
         new_column.append("Military flight")
     elif value in postal_cargo_flights:
@@ -86,19 +177,14 @@ for value in dataset.Operator:
     else:
         new_column.append("Scheduled flight")
 #%%
-dataset = dataset.assign(New_Operator_column=new_column)
-dataset
-#%%
-print(len(dataset.New_Operator_column.unique()))
+dataset_1st = dataset_1st.assign(New_Operator_column=new_column)
+dataset_1st
 #%% md
-#### Cleaning colonna **Route**
-#%%
-print("numero di NaN nella colonna Route:",
-      len([i for i in dataset.Route if type(i) == float]))  # 770.. da gestire
+#### Aggiunta colonna Aeroporto_di_partenza
 #%%
 rotte = []
 
-for position, route in enumerate(dataset.Route):
+for position, route in enumerate(dataset_1st.Route):
     if type(route) != float:
         rotte.append(route.split(" - "))
     else:
@@ -118,47 +204,45 @@ for position, route in enumerate(rotte):
                 new_route.append(aeroport[1:])
                 new_route.append(aeroport.strip())
             else:
-                new_route.append(aeroport.strip())
-    elif type(route) == float and dataset["New_Operator_column"].iloc[position] == "Military flight":
+                new_route.append(aeroport)
+    elif type(route) == float and dataset_1st["New_Operator_column"].iloc[position] == "Military flight":
         new_route.append("Informazione riservata")
     else:
         new_route.append("Sconosciuto")
     rotte_pulite.append(new_route)
 
-# print(rotte_pulite)
-#%% md
-#### Aggiunta colonna Aeroporto_di_partenza
+#print(rotte_pulite)
+#for i in rotte_pulite:
+    #print(i)
 #%%
 # Aggiunta colonna Aeroporto_di_partenza
 
 aeroporto_partenza = [aeroporto[0] for aeroporto in rotte_pulite]
-dataset = dataset.assign(Aeroporto_di_partenza=aeroporto_partenza)
-dataset
+dataset_1st = dataset_1st.assign(Aeroporto_di_partenza=aeroporto_partenza)
+
+dataset_1st
 #%% md
 #### Aggiunta colonne per aeroporti intermedi
 Il numero massimo di aeroporti nelle rotte è 7 quindi andranno create 7 nuove colonne
 #%%
-# for aeroporto in rotte_pulite:
-#     if len(aeroporto) == 7: print(aeroporto)
-
-aeroporto_di_destinazione = []
 aeroporto_2 = []
 aeroporto_3 = []
 aeroporto_4 = []
 aeroporto_5 = []
 aeroporto_6 = []
+ultimo_aeroporto = []
 
-# Molto brutto... Decidere se cambiare
+
 for n_aeroporti in rotte_pulite:
     if len(n_aeroporti) == 1:
-        aeroporto_di_destinazione.append(n_aeroporti)
+        ultimo_aeroporto.append(n_aeroporti)
         aeroporto_2.append("Nan")
         aeroporto_3.append("Nan")
         aeroporto_4.append("Nan")
         aeroporto_5.append("Nan")
         aeroporto_6.append("Nan")
     if len(n_aeroporti) == 2:
-        aeroporto_di_destinazione.append(n_aeroporti[-1])
+        ultimo_aeroporto.append(n_aeroporti[-1])
         aeroporto_2.append("Nan")
         aeroporto_3.append("Nan")
         aeroporto_4.append("Nan")
@@ -166,7 +250,7 @@ for n_aeroporti in rotte_pulite:
         aeroporto_6.append("Nan")
     if len(n_aeroporti) == 3:
         aeroporto_2.append(n_aeroporti[1])
-        aeroporto_di_destinazione.append(n_aeroporti[-1])
+        ultimo_aeroporto.append(n_aeroporti[-1])
         aeroporto_3.append("Nan")
         aeroporto_4.append("Nan")
         aeroporto_5.append("Nan")
@@ -174,7 +258,7 @@ for n_aeroporti in rotte_pulite:
     if len(n_aeroporti) == 4:
         aeroporto_2.append(n_aeroporti[1])
         aeroporto_3.append(n_aeroporti[2])
-        aeroporto_di_destinazione.append(n_aeroporti[-1])
+        ultimo_aeroporto.append(n_aeroporti[-1])
         aeroporto_4.append("Nan")
         aeroporto_5.append("Nan")
         aeroporto_6.append("Nan")
@@ -182,7 +266,7 @@ for n_aeroporti in rotte_pulite:
         aeroporto_2.append(n_aeroporti[1])
         aeroporto_3.append(n_aeroporti[2])
         aeroporto_4.append(n_aeroporti[3])
-        aeroporto_di_destinazione.append(n_aeroporti[-1])
+        ultimo_aeroporto.append(n_aeroporti[-1])
         aeroporto_5.append("Nan")
         aeroporto_6.append("Nan")
     if len(n_aeroporti) == 6:
@@ -190,7 +274,7 @@ for n_aeroporti in rotte_pulite:
         aeroporto_3.append(n_aeroporti[2])
         aeroporto_4.append(n_aeroporti[3])
         aeroporto_5.append(n_aeroporti[4])
-        aeroporto_di_destinazione.append(n_aeroporti[-1])
+        ultimo_aeroporto.append(n_aeroporti[-1])
         aeroporto_6.append("Nan")
     if len(n_aeroporti) == 7:
         aeroporto_2.append(n_aeroporti[1])
@@ -198,34 +282,30 @@ for n_aeroporti in rotte_pulite:
         aeroporto_4.append(n_aeroporti[3])
         aeroporto_5.append(n_aeroporti[4])
         aeroporto_6.append(n_aeroporti[5])
-        aeroporto_di_destinazione.append(n_aeroporti[-1])
+        ultimo_aeroporto.append(n_aeroporti[-1])
 
 # Alcuni valori di aeroporto_di destinazione erano in una lista. Risolviamo:
-for position, aeroporto in enumerate(aeroporto_di_destinazione):
+for position, aeroporto in enumerate(ultimo_aeroporto):
     if type(aeroporto) == list:
-        aeroporto_di_destinazione[position] = aeroporto[0]
+        ultimo_aeroporto[position] = aeroporto[0]
 
-dataset = dataset.assign(Aeroporto_2=aeroporto_2,
+dataset_1st = dataset_1st.assign(Aeroporto_2=aeroporto_2,
                          Aeroporto_3=aeroporto_3,
                          Aeroporto_4=aeroporto_4,
                          Aeroporto_5=aeroporto_5,
                          Aeroporto_6=aeroporto_6,
-                         Aeroporto_di_destinazione=aeroporto_di_destinazione)
+                         Ultimo_aeroporto=ultimo_aeroporto)
 
-dataset
+dataset_1st
 #%% md
 ### Cleaning AC type
 #%%
-# Prima pulizia
-
-print(len(dataset["AC Type"].unique()))
-
+print(len(dataset_1st["AC Type"].unique()))
 simplified_aircraft_names = []
-
 # Eliminazione dei pattern tipo "15-L ..." e "V-17 ..."
-for airplane in dataset["AC Type"]:
+for airplane in dataset_1st["AC Type"]:
     if type(airplane) != float and len(airplane.split()) > 1:
-        simplified_aircraft_names.append(re.sub(r"[A-Z0-9]+-.+", "", airplane).upper())
+        simplified_aircraft_names.append(re.sub(r"[A-Z0-9]+-.+", "", airplane).strip().upper())
     else:
         simplified_aircraft_names.append(airplane)
 
@@ -233,56 +313,201 @@ for airplane in dataset["AC Type"]:
 simplified_aircraft_names_1 = []
 for position, airplane in enumerate(simplified_aircraft_names):
     if type(airplane) != float and len(airplane.split()) > 1:
-        simplified_aircraft_names_1.append(re.sub(r"[A-Z0-9]+\.(.)+", "", airplane))
+        simplified_aircraft_names_1.append(re.sub(r"[A-Z0-9]+\.(.)+", "", airplane).strip())
     else:
         simplified_aircraft_names_1.append(airplane)
 
 print(simplified_aircraft_names_1)
-#%% md
-*Decidere se pulire maggiormente o meno*
 #%%
-dataset = dataset.assign(AC_Type_simplified=simplified_aircraft_names_1)
-print(f"Prima della pulizia: {len(dataset['AC Type'].unique())} valori univoci")
-print(f"Dopo la pulizia: {len(dataset['AC_Type_simplified'].unique())} valori univoci")
+dataset_1st = dataset_1st.assign(AC_Type_simplified=simplified_aircraft_names_1)
+print(f"Prima della pulizia: {len(dataset_1st['AC Type'].unique())} valori univoci")
+print(f"Dopo la pulizia: {len(dataset_1st['AC_Type_simplified'].unique())} valori univoci")
 #%% md
-### Controllo valori nulli delle colonne:
-- Aboard
-- Aboard Crew
-- Aboard Passangers
-- Fatalities
-- Fatalities Crew
-- Fatalities Passangers
-- Ground
+#### Change data format
+
 #%%
-def na_counter_for_numeric_column(column, nome_colonna):
-    nas = []
-    for value in column:
-        try:
-            int(value)
-        except:
-            nas.append(value)
-    return print(f"Numero di Na della colonna {nome_colonna}: {len(nas)}")
+print(dataset_1st['Date'])
+#%%
+new_date = []
+#%%
+for i in dataset_1st.Date :
+    new_date.append(*re.findall('[0-9]{4}',i))
+print(new_date)
 
+#%%
+dataset_1st = dataset_1st.assign(Year=new_date)
+#%% md
+##### Controlliamo che la variabile sia presente e la sua tipologia
+#%%
+dataset_1st.columns
+#%%
+for i in dataset_1st.Year:
+    print(type(i))
+#%%
+dataset_1st["Year"] = dataset_1st["Year"].astype(int)
+#%% md
+La colonna Date è rimasta all'interno del dataset senza subire modifiche, è stata invece aggiunta una nuova colonna denominata Year contenente solo l'anno presente nella colonna Date, al fine di eliminare il problemma di disomogeneità dei dati a causa dei diversi formati dd/mm/yyyy e mm/dd/yyyy presenti nel dataset a causa delle differene fra sistema anglosassone ed europeo.
+#%% md
+##### Si è deciso di aggiungere una variabile di nome decadi in modo da poter osservare l'aggregazione dei dati.
+#%%
+decadi=[]
+for i in dataset_1st["Year"]:
+    if i >= 1900 and i <= 1910:
+        i = "1910_20"
+        decadi.append(i)
+    elif i > 1910 and i <= 1920:
+        i = "1910_20"
+        decadi.append(i)
+    elif i > 1920 and i <= 1930:
+        i = "1920_30"
+        decadi.append(i)
+    elif i > 1930 and i <= 1940:
+        i = "1930_40"
+        decadi.append(i)
+    elif i > 1940 and i <= 1950:
+        i = "1940_50"
+        decadi.append(i)
+    elif i > 1950 and i <= 1960:
+        i = "1950_60"
+        decadi.append(i)
+    elif i > 1960 and i <= 1970:
+        i = "1960_70"
+        decadi.append(i)
+    elif i > 1970 and i <= 1980:
+        i = "1970_80"
+        decadi.append(i)
+    elif i > 1980 and i <= 1990:
+        i = "1980_90"
+        decadi.append(i)
+    elif i > 1990 and i <= 2000:
+        i = "1990_00"
+        decadi.append(i)
+    elif i > 2000 and i <= 2010:
+        i = "2000_10"
+        decadi.append(i)
+    elif i > 2010 and i <= 2020:
+        i = "2010_20"
+        decadi.append(i)
+    elif i > 2020 and i <= 2030:
+        i = "2020_30"
+        decadi.append(i)
+    else:
+        pass
+print(decadi)
+#%%
+from matplotlib import cm
+from matplotlib.pyplot import figure
 
-na_counter_for_numeric_column(dataset["Aboard"], "Aboard")
-na_counter_for_numeric_column(dataset["Aboard Crew"], "Aboard Crew")
-na_counter_for_numeric_column(dataset["Aboard Passangers"], "Aboard Passangers")
-na_counter_for_numeric_column(dataset["Fatalities"], "Fatalities")
-na_counter_for_numeric_column(dataset["Fatalities Crew"], "Fatalities Crew")
-na_counter_for_numeric_column(dataset["Fatalities Passangers"], "Fatalities Passangers")
+cs = sb.color_palette("tab20")
+#cs =["darkgrey","darkred","green","purple","aqua","blue","yellow","sienna","orangered","deeppink","springgreen","violet", "pink","dodgerblue"]
+
+dataset_1st=dataset_1st.assign(decadi=decadi)
+#dz = dict(df["Q5"].drop(0).value_counts())
+dz=dict(dataset_1st["decadi"].drop(0).value_counts())
+sb.set_style("whitegrid")
+pie, ax = plt.subplots(figsize=[10,12])
+Labels = [k for k in dz.keys()]
+Data   = [float(v) for v in dz.values()]
+plt.pie(x = Data, labels=Labels, autopct="%.1f%%", pctdistance=0.5, colors=cs);
+plt.title("Frequency of Decadi", fontsize=14);
 #%% md
-##### **Gli Na delle colonne Aboard e Fatalities secondo me si possono eliminare, magari quelli delle altre invece li sostituiamo con le medie**
+### Analisi variabili fatalities, crew and passengers e ripartizione fatalities
+
+#%%
+print(np.max(dataset_1st.Fatalities), np.min(dataset_1st.Fatalities), np.mean(dataset_1st.Fatalities),
+      np.median(dataset_1st.Fatalities), np.nanmedian(dataset_1st.Fatalities))
+print(np.max(dataset_1st["Ground"]), np.max(dataset_1st["Fatalities"]), np.max(dataset_1st["Fatalities Passangers"]),
+      np.max(dataset_1st["Fatalities Crew"]))
+print(dataset_1st.shape)
+dataset_1st = dataset_1st[dataset_1st["Fatalities"].notna()]
+dataset_1st = dataset_1st[dataset_1st["Fatalities Crew"].notna()]
+dataset_1st = dataset_1st[dataset_1st["Fatalities Passangers"].notna()]
+dataset_1st = dataset_1st[dataset_1st["Ground"].notna()]
+print(dataset_1st.shape)
 #%% md
----
----
-# Maic
+##### Qui creiamo nuove variabili per fare in modo che fatalities rappresenti la somma delle sue componenti, e che nel caso fatalities sia maggiore di questa somma la differenza venga aggiunga a new_fatalities_crew
+#%%
+new_fatalities = []
+new_fatalities_passangers = []
+new_ground = []
+new_fatalities_crew = []
+for position, i in enumerate(dataset_1st["Fatalities"]):
+    ##try and except per gestione na presenti nel dataset originali, tenuti per scelta stilistica e non per motivi computazionali
+    try:
+        total_death = (dataset_1st["Fatalities Crew"].iloc[position] + dataset_1st["Fatalities Passangers"].iloc[position] +
+                       dataset_1st["Ground"].iloc[position])
+        diff_death = i - total_death
+        if i == total_death:
+            new_fatalities.append(i)
+            new_fatalities_crew.append(dataset_1st["Fatalities Crew"].iloc[position])
+            new_fatalities_passangers.append(dataset_1st["Fatalities Passangers"].iloc[position])
+            new_ground.append(dataset_1st["Ground"].iloc[position])
+        elif i > total_death:
+            new_fatalities.append(i)
+            new_fatalities_crew.append(dataset_1st["Fatalities Crew"].iloc[position])
+            new_fatalities_passangers.append(dataset_1st["Fatalities Passangers"].iloc[position])
+            new_ground.append(dataset_1st["Ground"].iloc[position])
+        elif i < total_death:
+            i = total_death
+            new_fatalities.append(i)
+            new_fatalities_crew.append(dataset_1st["Fatalities Crew"].iloc[position])
+            new_fatalities_passangers.append(dataset_1st["Fatalities Passangers"].iloc[position])
+            new_ground.append(dataset_1st["Ground"].iloc[position])
+    except:
+        new_fatalities.append(i)
+        new_fatalities_crew.append(dataset_1st["Fatalities Crew"].iloc[position])
+        new_fatalities_passangers.append(dataset_1st["Fatalities Passangers"].iloc[position])
+        new_ground.append(dataset_1st["Ground"].iloc[position])
+print(len(new_fatalities), "new fatalities")
+print(len(new_ground), "new ground")
+print(len(new_fatalities_passangers), "new fatalities passangers")
+print(len(new_fatalities_crew), "new fatalities crew")
+#%% md
+##### Inseriamo le nuove variabili nel dataset
+#%%
+dataset_1st = dataset_1st.assign(new_fatalities=new_fatalities, new_fatalities_crew=new_fatalities_crew, new_fatalities_passangers=new_fatalities_passangers, new_ground=new_ground)
+dataset_1st
+#%% md
+###### Lo stesso passaggio precedente viene eseguito anche su Aboard con ripartizione su Aboard Crew
+#%%
+print(dataset_1st.shape)
+dataset_1st = dataset_1st[dataset_1st["Aboard"].notna()]
+dataset_1st = dataset_1st[dataset_1st["Aboard Passangers"].notna()]
+dataset_1st = dataset_1st[dataset_1st["Aboard Crew"].notna()]
+print(dataset_1st.shape)
+#%%
+new_aboard = []
+new_aboard_passangers = []
+new_aboard_crew = []
+for position, i in enumerate(dataset_1st.Aboard):
+    try:
+        total_ab = (dataset_1st["Aboard Passangers"].iloc[position] + dataset_1st["Aboard Crew"].iloc[position])
+        diff_ab= dataset_1st["Aboard"].iloc[position]-total_ab
+        if i == total_ab:
+            new_aboard.append(i)
+            new_aboard_crew.append(dataset_1st["Aboard Crew"].iloc[position])
+            new_aboard_passangers.append(dataset_1st["Aboard Passangers"].iloc[position])
+        elif i > total_ab:
+            new_aboard.append(i)
+            a=(dataset_1st["Aboard Crew"].iloc[position]+diff_ab)
+            new_aboard_crew.append(a)
+            new_aboard_passangers.append(dataset_1st["Aboard Passangers"].iloc[position])
+        elif i < total_ab:
+            i=total_ab
+            new_aboard.append(i)
+            new_aboard_crew.append(dataset_1st["Aboard Crew"].iloc[position])
+            new_aboard_passangers.append(dataset_1st["Aboard Passangers"].iloc[position])
+    except:
+        print("mannaggia")
+#%%
+dataset_1st = dataset_1st.assign(new_aboard=new_aboard, new_aboard_crew=new_aboard_crew, new_aboard_passangers=new_aboard_passangers)
+dataset_1st
 #%% md
 ### Location Variable -> estraiamo dal testo solo gli stati
-#%% md
 #### regex per prendere solo quello dopo l'ultima virgola
 #%%
 new_location = []
-for w in dataset.Location:
+for w in dataset_1st.Location:
     new_location.append(re.findall("[^ ,]\w*$", str(w)))
 
 print(new_location)
@@ -296,7 +521,7 @@ for i in new_location:
 
 print(tmp_state)
 #%% md
-#### Pulisco i valori
+#### Puliamo i valori
 #%%
 tmp_state_cleaned = []
 for i in tmp_state:
@@ -306,17 +531,17 @@ print(tmp_state_cleaned)
 #%% md
 #### Infine andiamo a creare una nuovo variabile a ad inserirla all'interno del dataset
 #%%
-dataset = dataset.assign(state_location=tmp_state_cleaned)
-print(dataset.state_location)
+dataset_1st = dataset_1st.assign(state_location=tmp_state_cleaned)
+print(dataset_1st.state_location)
 #%%
-list_of_states = dataset.state_location.unique()
+list_of_states = dataset_1st.state_location.unique()
 print(list_of_states)
 #%% md
-#### Noto che c'è un nan value e campi vuoti non visti in precedenza
+#### Notiamo la presenza di un nan value e campi vuoti non visti in precedenza
 #%%
 count_nan = 0
 count_vuoti = 0
-for i in dataset.state_location:
+for i in dataset_1st.state_location:
     if i == 'nan':
         count_nan += 1
     elif i == '':
@@ -325,25 +550,25 @@ for i in dataset.state_location:
 print('counter nan: ', count_nan)
 print('counter spazi vuoti: ', count_vuoti)
 #%% md
-#### Li elimino
+#### Li andiamo ad eliminare
 #%%
-dataset = dataset[dataset.state_location != 'nan']
-dataset = dataset[dataset.state_location != '']
-print(dataset)
+dataset_1st = dataset_1st[dataset_1st.state_location != 'nan']
+dataset_1st = dataset_1st[dataset_1st.state_location != '']
+print(dataset_1st)
 #%% md
 #### Check finale
 #%%
 count = 0
-for i in dataset.state_location:
+for i in dataset_1st.state_location:
     if i == 'nan' or i == '':
         count += 1
 print(count)
 #%% md
-#### Accorpo alcuni stati e correggo quelli scritti in modo scorretto
+#### Accorpiamo alcuni stati e correggiamo quelli scritti in modo scorretto
 #%% md
 ##### Stati Uniti
 #%%
-list_of_states_cleaned = dataset.state_location.unique()
+list_of_states_cleaned = dataset_1st.state_location.unique()
 print(list_of_states_cleaned)
 #%%
 USA_states = ['Virginia', 'Jersey', 'Ohio', 'Pennsylvania', 'Illinois', 'Maryland', 'Kent', 'Indiana', 'Iowa',
@@ -353,9 +578,10 @@ USA_states = ['Virginia', 'Jersey', 'Ohio', 'Pennsylvania', 'Illinois', 'Marylan
               'Georgia', 'Montana', 'Mississippi', 'Alaska', 'Cailifornia', 'Indies', 'Andes', 'Guam', 'Tonkin',
               'Carolina', 'Kentucky', 'Maine', 'Alabama', 'Delaware', 'Dekota', 'Hampshire', 'Washingon', 'DC',
               'Tennesee', 'Deleware', 'Louisiana', 'Massachutes', 'Alakska', 'Coloado', 'Vermont', 'Dakota',
-              'Calilfornia', 'Alaksa', 'Mississipi', 'Arizona', 'Wisconson', 'Nebraska', 'Oklahoma', 'Airzona', 'HI', 'Hawaii']
+              'Calilfornia', 'Alaksa', 'Mississipi', 'Arizona', 'Wisconson', 'Nebraska', 'Oklahoma', 'Airzona', 'HI',
+              'Hawaii']
 states = []
-for state in dataset.state_location:
+for state in dataset_1st.state_location:
     if state in USA_states:
         states.append('United States')
     else:
@@ -470,26 +696,28 @@ for state in states2:
 
 print(set(states3))
 #%% md
-#### Infine inserisco la variabile nel dataset
+#### Infine andiamo ad inserire la variabile nel dataset
 #%%
-dataset = dataset.assign(States=states3)
+dataset_1st = dataset_1st.assign(States=states3)
 #%% md
-#### Elimino altre due osservazioni che non siamo riusciti a classificare
+#### Eliminiamo altre due osservazioni che non siamo riusciti a classificare
 #%%
-dataset = dataset[dataset.States != 'AK']
-dataset = dataset[dataset.States != 'Nag']
-dataset.States
+dataset_1st = dataset_1st[dataset_1st.States != 'AK']
+dataset_1st = dataset_1st[dataset_1st.States != 'Nag']
+dataset_1st.States
 #%% md
-### Macro-aree
+### Seb_Regioni
 #%% md
-#### Importiamo un dataset di supporto che ci permette di fare un match tra i paesi e i territori
+#### Importiamo un dataset di supporto tramite il quale andremo a fare un match tra i paesi e i territori
+#%%
+continents_dataset = pd.read_csv("datasets/continents2.csv")
 #%%
 continents_dataset
 #%%
 macro_aree = continents_dataset['sub-region'].unique()
 print(macro_aree)
 #%% md
-#### Creo la lista dei paesi per ogni macro-area
+#### Creiamo la lista dei paesi per ciascuna seb_regione
 #%%
 Southern_Asia = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Southern Asia').unique()
 
@@ -501,13 +729,16 @@ Northern_Africa = continents_dataset['name']._where(continents_dataset['sub-regi
 
 Polynesia = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Polynesia').unique()
 
-Sub_Saharan_Africa = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Sub-Saharan Africa').unique()
+Sub_Saharan_Africa = continents_dataset['name']._where(
+    continents_dataset['sub-region'] == 'Sub-Saharan Africa').unique()
 
-Latin_America = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Latin America and the Caribbean').unique()
+Latin_America = continents_dataset['name']._where(
+    continents_dataset['sub-region'] == 'Latin America and the Caribbean').unique()
 
 Western_Asia = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Western Asia').unique()
 
-Australia_and_Zealand = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Australia and New Zealand').unique()
+Australia_and_Zealand = continents_dataset['name']._where(
+    continents_dataset['sub-region'] == 'Australia and New Zealand').unique()
 
 Western_Europe = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Western Europe').unique()
 
@@ -515,7 +746,8 @@ Eastern_Europe = continents_dataset['name']._where(continents_dataset['sub-regio
 
 Northern_America = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Northern America').unique()
 
-South_Eastern_Asia = continents_dataset['name']._where(continents_dataset['sub-region'] == 'South-eastern Asia').unique()
+South_Eastern_Asia = continents_dataset['name']._where(
+    continents_dataset['sub-region'] == 'South-eastern Asia').unique()
 
 Eastern_Asia = continents_dataset['name']._where(continents_dataset['sub-region'] == 'Eastern Asia').unique()
 
@@ -528,10 +760,10 @@ Central_Asia = continents_dataset['name']._where(continents_dataset['sub-region'
 
 #print(Southern_Europe)
 #%% md
-#### Faccio un match per ogni zona tra gli stati del dataset e quelli del dataset di supporto
+#### Facciamo un match per ogni sub_regione tra gli stati del dataset e quelli del dataset di supporto
 #%%
 sub_regions = []
-for nation in dataset.States:
+for nation in dataset_1st.States:
     if nation in Southern_Asia:
         sub_regions.append('Southern Asia')
     elif nation in Northern_Europe:
@@ -570,7 +802,7 @@ for nation in dataset.States:
 
 print(sorted(set(sub_regions)))
 #%% md
-#### Classifico manualmente alcuni paesi che sono rimasti fuori dal match
+#### Classifichiamo manualmente alcuni paesi che sono rimasti fuori dal match
 #%%
 sub_regions2 = []
 for sub in sub_regions:
@@ -601,13 +833,13 @@ for sub in sub_regions:
 
 print(sorted(set(sub_regions2)))
 #%% md
-#### Creo la nuova colonna con i sub_continenti
+#### Creiamo la nuova colonna con le sub_regioni
 #%%
-dataset = dataset.assign(Sub_Regions=sub_regions2)
+dataset_1st = dataset_1st.assign(Sub_Regions=sub_regions2)
 #%%
-dataset.Sub_Regions
+dataset_1st.Sub_Regions
 #%% md
-#### Infine controllo le ultime osservazioni che non sono utili ai fini dell'analisi
+#### Infine controlliamo le ultime osservazioni che non sono utili ai fini dell'analisi
 #%%
 count_Africa = 0
 count_Base = 0
@@ -628,38 +860,37 @@ count_USSR = 0
 
 for i in sub_regions2:
     if i == 'Africa':
-        count_Africa+=1
+        count_Africa += 1
     elif i == 'Base':
-        count_Base+=1
+        count_Base += 1
     elif i == 'Channel':
-        count_channel+=1
+        count_channel += 1
     elif i == 'Newfoundland':
-        count_newfoundland+=1
+        count_newfoundland += 1
     elif i == 'Ocean':
-        count_Ocean+=1
+        count_Ocean += 1
     elif i == 'Sea':
-        count_Sea+=1
+        count_Sea += 1
     elif i == 'Sound':
-        count_sound+=1
+        count_sound += 1
     elif i == 'Station':
-        count_station+=1
+        count_station += 1
     elif i == 'Territory':
-        count_Territory+=1
+        count_Territory += 1
     elif i == 'Island':
-        count_island+=1
+        count_island += 1
     elif i == 'Islands':
-        count_islands+=1
+        count_islands += 1
     elif i == 'Airport':
-        count_airport+=1
+        count_airport += 1
     elif i == 'Coast':
-        count_coast+=1
+        count_coast += 1
     elif i == 'Gulf':
-        count_gulf+=1
+        count_gulf += 1
     elif i == 'Republic':
-        count_republic+=1
+        count_republic += 1
     elif i == 'USSR':
-        count_USSR+=1
-
+        count_USSR += 1
 
 print(
     count_Africa,
@@ -683,32 +914,32 @@ print(
 #da eliminare sicuro: Territory, Station, Sound, Base, Channel, Newfoundland, gulf, airport, coast,
 # Valutare anche le altre, io eliminerei tutto tranne 'Africa' perché 1) 175 non sono troppe, 2) sono generiche e non è possibile avere una localizzazione geografica.
 #%% md
-#### E alcune decido di eliminarle (tutte tranne 'Africa')
+#### E alcune decidiamo di eliminarle (tutte tranne 'Africa')
 #%%
-dataset = dataset[dataset.Sub_Regions != 'Territory']
-dataset = dataset[dataset.Sub_Regions != 'Station']
-dataset = dataset[dataset.Sub_Regions != 'Sound']
-dataset = dataset[dataset.Sub_Regions != 'Base']
-dataset = dataset[dataset.Sub_Regions != 'Channel']
-dataset = dataset[dataset.Sub_Regions != 'Newfoundland']
-dataset = dataset[dataset.Sub_Regions != 'Ocean']
-dataset = dataset[dataset.Sub_Regions != 'Island']
-dataset = dataset[dataset.Sub_Regions != 'Islands']
-dataset = dataset[dataset.Sub_Regions != 'Airport']
-dataset = dataset[dataset.Sub_Regions != 'Coast']
-dataset = dataset[dataset.Sub_Regions != 'Gulf']
-dataset = dataset[dataset.Sub_Regions != 'Republic']
-dataset = dataset[dataset.Sub_Regions != 'Sea']
+dataset_1st = dataset_1st[dataset_1st.Sub_Regions != 'Territory']
+dataset_1st = dataset_1st[dataset_1st.Sub_Regions != 'Station']
+dataset_1st = dataset_1st[dataset_1st.Sub_Regions != 'Sound']
+dataset_1st = dataset_1st[dataset_1st.Sub_Regions != 'Base']
+dataset_1st = dataset_1st[dataset_1st.Sub_Regions != 'Channel']
+dataset_1st = dataset_1st[dataset_1st.Sub_Regions != 'Newfoundland']
+dataset_1st = dataset_1st[dataset_1st.Sub_Regions != 'Ocean']
+dataset_1st = dataset_1st[dataset_1st.Sub_Regions != 'Island']
+dataset_1st = dataset_1st[dataset_1st.Sub_Regions != 'Islands']
+dataset_1st = dataset_1st[dataset_1st.Sub_Regions != 'Airport']
+dataset_1st = dataset_1st[dataset_1st.Sub_Regions != 'Coast']
+dataset_1st = dataset_1st[dataset_1st.Sub_Regions != 'Gulf']
+dataset_1st = dataset_1st[dataset_1st.Sub_Regions != 'Republic']
+dataset_1st = dataset_1st[dataset_1st.Sub_Regions != 'Sea']
 #%%
-dataset.Sub_Regions
+dataset_1st.Sub_Regions
 #%% md
-#### Adesso vado a creare un'altra variabile che racchiude le macro-aree in continenti
+#### Adesso andiamo a creare un'altra variabile che racchiude le sub_regioni nei continenti
 #%%
-dataset.Sub_Regions.unique()
+dataset_1st.Sub_Regions.unique()
 #%%
 continents_dataset.region.unique()
 #%% md
-#### Creo una variabile per ogni continente utilizzando il dataset di supporto
+#### Creiamo una variabile per ogni continente utilizzando il dataset di supporto
 #%%
 Asia = continents_dataset['sub-region']._where(continents_dataset['region'] == 'Asia').unique()
 
@@ -722,415 +953,58 @@ Oceania = continents_dataset['sub-region']._where(continents_dataset['region'] =
 
 print(Africa)
 #%% md
-#### Faccio il matching tra le macroaree precedentemente definite
+#### Andiamo a fare il matching tra le Sub_Regioni precedentemente definite
 #%%
-regions = []
-for sub_region in dataset.Sub_Regions:
+Continents = []
+for sub_region in dataset_1st.Sub_Regions:
     if sub_region in Asia:
-        regions.append('Asia')
+        Continents.append('Asia')
     elif sub_region in Europe:
-        regions.append('Europe')
+        Continents.append('Europe')
     elif sub_region in Africa:
-        regions.append('Africa')
+        Continents.append('Africa')
     elif sub_region in America:
-        regions.append('America')
+        Continents.append('America')
     elif sub_region in Oceania:
-        regions.append('Oceania')
-    else: regions.append(sub_region)
+        Continents.append('Oceania')
+    else: Continents.append(sub_region)
 
-print(sorted(set(regions)))
+print(sorted(set(Continents)))
+#%%
+a=0
+b=0
+for i in Continents:
+    if i == "Antarctica":
+        a+=1
+    elif i == "Atlantic":
+        b+=1
+
+print(a,b)
+#        Continents.append(i)
+print(len(Continents))
+#%%
+print(set(Continents))
 #%% md
-#### creo la nuova variabile e la aggiungo al dataset
+#### Creiamo la nuova variabile e la andiamo ad aggiungere al dataset
 #%%
-dataset = dataset.assign(Continent=regions)
+dataset_1st = dataset_1st.assign(Continent=Continents)
 #%%
-dataset
-#%% md
-## Estrazione delle città in cui è caduto (Non utilizziamo per ora)
-#%%
-cities_location = []
-for city in dataset.Location:
-    cities_location.append(re.findall("^(.+?),", str(city)))
-
-print(cities_location)
-#%%
-tmp_cities = []
-for i in cities_location:
-    for w in i:
-        tmp_cities.append(w)
-
-print(tmp_cities)
-#%%
-tmp_cities_cleaned = []
-for i in tmp_cities:
-    tmp_cities_cleaned.append(re.sub(rf"[^\w\s]", "", i).strip())
-
-print(tmp_cities_cleaned)
-#%%
-print(len(sorted(set(tmp_cities_cleaned))))
-print(sorted(set(tmp_cities_cleaned)))
-#%%
-cities_dataset.state_name.unique()
-#%%
-matched_cities = []
-no_matched_cities = []
-for city in tmp_cities_cleaned:
-    if city in list(cities_dataset.state_name.unique()):
-        matched_cities.append(city)
-    else: no_matched_cities.append(city)
-
-print(matched_cities)
-print(len(no_matched_cities))
-#%% md
-
-#    Leo
-#%% md
-Change data format
+dataset_1st = dataset_1st._where(dataset_1st.Continent != "Atlantic")
+dataset_1st = dataset_1st._where(dataset_1st.Continent != "Antarctica")
 
 #%%
-print(dataset['Date'])
-#%% md
-
-#%%
-new_date = []
-#%%
-for i in dataset.Date:
-    #print (re.findall('[0-9]{4}',i))
-    new_date.append(*re.findall('[0-9]{4}', i))
-    #a = a.append(i[i.re.findall('[0-9]{4}',i)])
-print(new_date)
-
-#%%
-dataset = dataset.assign(Year=new_date)
-#%%
-dataset.columns
-#%%
-print(type(dataset.Year))
-#%%
-for i in dataset.Year:
-    print(type(i))
-#%%
-dataset["Year"] = dataset["Year"].astype(int)
-#%% md
-La colonna Date è rimasta all'interno del dataset senza subire modifiche, è stata invece aggiunta una nuova colonna denominata Year contenente solo l'anno presente nella colonna Date, al fine di eliminare il problemma di disomogeneità dei dati a causa dei diversi formati dd/mm/yyyy e mm/dd/yyyy presenti nel dataset a causa delle differene fra sistema anglosassone ed europeo.
-#%% md
-
-#%% md
-Ovviamente nel codice sono presenti dei print esclusivamente a fini di comprensione del lavoro che possono essere eliminati nella versione finale.
-#%% md
-###     Osservazione variabile Time
-
-#%%
-ore = []
-#%%
-for i in dataset.Time:
-    #if type(i) == float:
-    #   print(i)
-    if type(i) == str:
-        ore.append(i)
-
-print(ore, len(ore))
-#%%
-bbb = 0
-for i in dataset.Time:
-    if type(i) == float:
-        bbb = bbb + 1
-print(bbb)
-#%%
-bb = 0
-for i in dataset.Time:
-    if type(i) == str:
-        bb = bb + 1
-print(bb)
-#%%
-new_ore = []
-for i in ore:
-    #print(i,re.sub(rf"[:].*","",i))
-    #i = (re.sub(rf"[:].*","",i))
-    new_ore.append(re.sub(rf"[:].*", "", i))
-print(new_ore, len(new_ore))
-
-
-#%%
-f = 0
-for i in new_ore:
-    i = int(i)
-    f = f + 1
-    #print(i,type(i))
-print(f)
-#%%
-int_ore = []
-for i in new_ore:
-    int_ore.append(int(i))
-print(len(int_ore), int_ore, type(int_ore[2]))
-#%%
-# dataset = dataset.assign(Hour=new_ore)
-#%%
-int_ore = []
-for i in new_ore:
-    int_ore.append(int(i))
-print(len(int_ore), int_ore, type(int_ore[2]))
-#%%
-for i in int_ore:
-    if i > 24:
-        print(i)
-import math
-import numpy
-
-print(numpy.mean(int_ore))
-#%%
-
-patches = plt.hist(int_ore)
-# np.arange()
-
-plt.xlabel("Values")
-plt.ylabel("Frequency")
-plt.title("Histogram")
-plt.show()
-#%%
-#dataset=dataset.assign(Hour=new_ore)
-#%% md
-##### Si è scelto di non utilizzare la colonna Time in quanto poco significativa come distribuzione e poiché presenta un 30% circa di nan
-#%% md
-# Analisi variabili fatalities, crew and passengers e ripartizione fatalities
-
-#%% md
-#### Commenta sti cazzo di print
-
-#%%
-dataset.keys()
-#%%
-print(np.max(dataset.Fatalities), np.min(dataset.Fatalities), np.mean(dataset.Fatalities),
-      np.median(dataset.Fatalities), np.nanmedian(dataset.Fatalities))
-print(np.max(dataset["Ground"]), np.max(dataset["Fatalities"]), np.max(dataset["Fatalities Passangers"]),
-      np.max(dataset["Fatalities Crew"]))
-print(dataset.shape)
-dataset = dataset[dataset["Fatalities"].notna()]
-dataset = dataset[dataset["Fatalities Crew"].notna()]
-dataset = dataset[dataset["Fatalities Passangers"].notna()]
-dataset = dataset[dataset["Ground"].notna()]
-print(dataset.shape)
-#%%
-new_fat = []
-new_pass = []
-new_ground = []
-new_crew = []
-for position, i in enumerate(dataset[
-                                 "Fatalities"]):  ##try and except per gestione na presenti nel dataset originali, tenuti per scelta stilistica e non per motivi computazionali
-    try:
-        total_death = (dataset["Fatalities Crew"].iloc[position] + dataset["Fatalities Passangers"].iloc[position] +
-                       dataset["Ground"].iloc[position])
-        diff_death = i - total_death
-        if i == total_death:
-            new_fat.append(i)
-            new_crew.append(dataset["Fatalities Crew"].iloc[position])
-            new_pass.append(dataset["Fatalities Passangers"].iloc[position])
-            new_ground.append(dataset["Ground"].iloc[position])
-        elif i > total_death:
-            new_fat.append(i)
-            new_crew.append(dataset["Fatalities Crew"].iloc[position])
-            new_pass.append(dataset["Fatalities Passangers"].iloc[position])
-            new_ground.append(dataset["Ground"].iloc[position])
-        elif i < total_death:
-            i = total_death
-            new_fat.append(i)
-            new_crew.append(dataset["Fatalities Crew"].iloc[position])
-            new_pass.append(dataset["Fatalities Passangers"].iloc[position])
-            new_ground.append(dataset["Ground"].iloc[position])
-    except:
-        new_fat.append(i)
-        new_crew.append(dataset["Fatalities Crew"].iloc[position])
-        new_pass.append(dataset["Fatalities Passangers"].iloc[position])
-        new_ground.append(dataset["Ground"].iloc[position])
-print(len(new_fat), "new fat")
-print(len(new_ground), "new gr")
-print(len(new_pass), "new pass")
-print(len(new_crew), "new crew")
-#%%
-dataset = dataset.assign(new_fat=new_fat, new_crew=new_crew, new_pass=new_pass, new_ground=new_ground)
-dataset
-#%%
-print(dataset.shape)
-dataset = dataset[dataset["Aboard"].notna()]
-dataset = dataset[dataset["Aboard Passangers"].notna()]
-dataset = dataset[dataset["Aboard Crew"].notna()]
-print(dataset.shape)
-#%%
-new_aboard = []
-new_aboard_pass = []
-new_aboard_crew = []
-for position, i in enumerate(dataset.Aboard):
-    try:
-        total_ab = (dataset["Aboard Passangers"].iloc[position] + dataset["Aboard Crew"].iloc[position])
-        if i == total_ab:
-            print("tutto ok", i, dataset["Aboard Crew"].iloc[position], dataset["Aboard Passangers"].iloc[position])
-            new_aboard.append(i)
-            new_aboard_crew.append(dataset["Aboard Crew"].iloc[position])
-            new_aboard_pass.append(dataset["Aboard Passangers"].iloc[position])
-        else:
-            print("nada ok", i, dataset["Aboard Crew"].iloc[position], dataset["Aboard Passangers"].iloc[position])
-            i = total_ab
-            new_aboard.append(i)
-            new_aboard_crew.append(dataset["Aboard Crew"].iloc[position])
-            new_aboard_pass.append(dataset["Aboard Passangers"].iloc[position])
-    except:
-        print("mannaggia")
-#%%
-print(dataset.shape)
-dataset = dataset.assign(new_aboard=new_aboard, new_aboard_crew=new_aboard_crew, new_aboard_pass=new_aboard_pass)
-dataset
-#%% md
-# Il codice quà sotto serve?
-#%%
-print(dataset["Aboard"], new_aboard)
-coo = 0
-dataset = dataset[dataset["Fatalities"].notna()]
-for position, i in enumerate(dataset.Fatalities):
-    #if type(i) != float:
-    if i == 0.0:
-        print("fata", "fata crew", "fata pass")
-        print(i, dataset["Fatalities Crew"].iloc[position], dataset["Fatalities Passangers"].iloc[position])
-        coo = coo + 1
-print(coo)
-#%%
-def na_counter_for_numeric_column(column, nome_colonna):
-    nas = []
-    for value in column:
-        try:
-            int(value)
-        except:
-            nas.append(value)
-    return print(f"Numero di Na della colonna {nome_colonna}: {len(nas)}")
-
-
-na_counter_for_numeric_column(dataset["Aboard"], "Aboard")
-na_counter_for_numeric_column(dataset["Aboard Crew"], "Aboard Crew")
-na_counter_for_numeric_column(dataset["Aboard Passangers"], "Aboard Passangers")
-na_counter_for_numeric_column(dataset["Fatalities"], "Fatalities")
-na_counter_for_numeric_column(dataset["Fatalities Crew"], "Fatalities Crew")
-na_counter_for_numeric_column(dataset["Fatalities Passangers"], "Fatalities Passangers")
-na_counter_for_numeric_column(dataset["Ground"], "Ground")
-
-""" La parte quà sotto era già stata fatta """
-# print(dataset.shape)
-# dataset = dataset[dataset["Fatalities"].notna()]
-# dataset = dataset[dataset["Fatalities Crew"].notna()]
-# dataset = dataset[dataset["Fatalities Passangers"].notna()]
-# dataset = dataset[dataset["Ground"].notna()]
-# print(dataset.shape)
-# print(np.mean(dataset("")))
-# dataset = dataset[dataset["Ground"].notna()]
-dataset.keys()
-# dataset = dataset.assign(new_fat=new_fat, new_crew=new_crew)
-#%% md
-# Eliminazione Variabili (maic)
-#%%
-dataset
-#%%
-
-col_to_del = ['Date', 'Time', 'Location', 'Flight #', 'Registration', 'cn/ln', 'state_location', 'Ac Type', 'Route', 'Fatalities', 'Fatalities Crew', 'Fatalities Passangers', 'Grounds']
-
-dataset_def = dataset
-for col in dataset_def.columns:
-    if col in col_to_del:
-        dataset_def = dataset_def.drop(col, axis=1)
-
-dataset_def
-#%% md
-## Grafici Maic
-#%%
-plt.hist(dataset['Fatalities Passangers'], alpha=0.8, bins=100 , histtype='bar', color='blue',ec='white')
-#%%
-sb.displot(dataset, x="Fatalities Crew", binwidth=0.5)
-#%%
-sb.kdeplot('Fatalities', data=dataset, shade=True)
-sb.set_style("white")
-sb.despine()
-#%%
-sb.displot(dataset, x="Aboard Passangers", binwidth=10)
-#%%
-plt.hist(dataset['Aboard Crew'], alpha=0.8, bins=100 , histtype='bar', color='blue',ec='white')
-#%%
-sb.kdeplot('Aboard', data=dataset, shade=True)
-sb.set_style("white")
-sb.despine()
-#%%
-# x = dataset.loc[:, ['new_fat']]
-# dataset['new_fat'] = (x - x.mean())/x.std()
-# dataset['colors'] = ['red' if x < 0 else 'green' for x in dataset['new_fat']]
-# dataset.sort_values('new_fat', inplace=True)
-# dataset.reset_index(inplace=True)
-#
-# # Draw plot
-# plt.figure(figsize=(14,10), dpi= 80)
-# plt.hlines(y=dataset.index, xmin=0, xmax=dataset.mpg_z, color=dataset.colors, alpha=0.4, linewidth=5)
-#
-# # Decorations
-# plt.gca().set(ylabel='$Sub_Regions$', xlabel='$new_fat$')
-# plt.yticks(dataset.index, dataset., fontsize=12)
-# plt.title('Diverging Bars of Car Mileage', fontdict={'size':20})
-# plt.grid(linestyle='--', alpha=0.5)
-# plt.show()
-#%%
-#sb.countplot(x ='Continent',data = dataset_def)
-#%%
-
-#%%
-# fig, ax = plt.subplots() # Create the figure and axes object
-#
-# # Plot the first x and y axes:
-# dataset_def.plot(x = 'Sub_Regions', y = 'new_crew', ax = ax)
-#%%
-# # Prepare Data
-# df = dataset_def[['Continent', 'new_fat']].groupby('new_fat').apply(lambda x: x.mean())
-# df.sort_values('Continent', inplace=True)
-# df.reset_index(inplace=True)
-#
-# # Draw plot
-# import matplotlib.patches as patches
-#
-# fig, ax = plt.subplots(figsize=(16,10), facecolor='white', dpi= 80)
-# ax.vlines(x=df.index, ymin=0, ymax=df.Sub_Regions, color='firebrick', alpha=0.7, linewidth=20)
-#
-# # Annotate Text
-# for i, sub in enumerate(df.Sub_Regions):
-#     ax.text(i, sub+0.5, round(sub, 1), horizontalalignment='center')
-#
-#
-# # Title, Label, Ticks and Ylim
-# ax.set_title('Bar Chart for Fatalities', fontdict={'size':22})
-# ax.set(ylabel='Number of deaths for sub regions', ylim=(0, 30))
-# plt.xticks(df.index, df.new_fat.str.upper(), rotation=60, horizontalalignment='right', fontsize=12)
-#
-# # Add patches to color the X axis labels
-# p1 = patches.Rectangle((.57, -0.005), width=.33, height=.13, alpha=.1, facecolor='green', transform=fig.transFigure)
-# p2 = patches.Rectangle((.124, -0.005), width=.446, height=.13, alpha=.1, facecolor='red', transform=fig.transFigure)
-# fig.add_artist(p1)
-# fig.add_artist(p2)
-# plt.show()
-#%%
-# # Load Dataset
-# #titanic = sb.load_dataset(dataset_def)
-#
-# # Plot
-# g = sb.catplot("new_fat", col="Continent", col_wrap=4,
-#                 data=dataset_def,
-#                 kind="count", height=3.5, aspect=.8,
-#                 palette='tab20')
-#
-# fig.suptitle('sf')
-# plt.show()
+dataset_1st.Continent.unique()
 #%% md
 ## Estrazione città da Aeroporto di partenza
 
 #%%
-dataset_def
+dataset_1st
 #%%
-dataset_def.Aeroporto_di_partenza.unique()
+dataset_1st.Aeroporto_di_partenza.unique()
 #%%
 aerop_matched = []
 aerop_not_matched = []
-for aerop in dataset_def.Aeroporto_di_partenza:
+for aerop in dataset_1st.Aeroporto_di_partenza:
     if aerop in world_cities_dataset.name.unique():
         aerop_matched.append(aerop)
     elif aerop == 'Demonstration':
@@ -1151,7 +1025,7 @@ for aerop in dataset_def.Aeroporto_di_partenza:
         aerop_matched.append(aerop)
     elif aerop in cities_dataset.name.unique():
         aerop_matched.append(aerop)
-    elif aerop in dataset_def.States.unique():
+    elif aerop in dataset_1st.States.unique():
         aerop_matched.append(aerop)
     else: aerop_not_matched.append(aerop)
 
@@ -1160,47 +1034,235 @@ print(f'città NON matchate: {len(aerop_not_matched)}')
 #%%
 print(len(set(aerop_matched)))
 #%%
-dataset_test = dataset_def
-dataset_test
-#%%
-aerop_not_matched
-#%%
-for i in dataset_test.Aeroporto_di_partenza:
+for i in dataset_1st.Aeroporto_di_partenza:
     if i in aerop_not_matched:
-        dataset_test = dataset_test[dataset_test.Aeroporto_di_partenza != i]
-#%%
-dataset_test
+        dataset_1st = dataset_1st[dataset_1st.Aeroporto_di_partenza != i]
 #%% md
-#### STEMMING (NON Utilizzato)
-#%%
-from nltk.stem import PorterStemmer
-stemmer = PorterStemmer()
-#%%
-stemmed_cities = [stemmer.stem(city) for city in world_cities_dataset.name.unique()]
-stemmed_aerop = [stemmer.stem(city) for city in aerop_not_matched]
-#%%
-aerop_matched_stemm = []
-aerop_not_matched_stemm = []
-for aerop in aerop_not_matched:
-    if aerop in stemmed_cities:
-        aerop_matched_stemm.append(aerop)
-    else: aerop_not_matched_stemm.append(aerop)
-#%%
-print(f'città matchate stemming: {len(aerop_matched_stemm)}')
-print(f'città NON matchate stemming: {len(aerop_not_matched_stemm)}')
-#%%
-aerop_matched_stemm_ = []
-aerop_not_matched_stemm_ = []
-for aerop in stemmed_aerop:
-    if aerop in stemmed_cities:
-        aerop_matched_stemm_.append(aerop)
-    else: aerop_not_matched_stemm_.append(aerop)
+#### Aggiunta colonna relativa agli stati degli aeroporti di partenza
 
 #%%
-print(f'città matchate stemming: {len(aerop_matched_stemm_)}')
-print(f'città NON matchate stemming: {len(aerop_not_matched_stemm_)}')
+a = {}
+for i in dataset_1st["Aeroporto_di_partenza"]:
+    if i in cities_dataset["name"].values:
+        b = str(cities_dataset["country_name"][cities_dataset["name"] == i]).split()[1]
+        if i == "Paris":
+            a["Paris"] = "France"
+        elif i == "Washington":
+            a[i] = "United States"
+        elif b == "United":
+            a[i] = b + " " + str(cities_dataset["country_name"][cities_dataset["name"] == i]).split()[2]
+        elif i == "London":
+            a[i] = "United Kingdom"
+        else:
+            a[i] = b
+    else:
+        a[i] = i
+state_aerop_partenza = [a[state] for state in dataset_1st["Aeroporto_di_partenza"]]
+
+dataset_1st = dataset_1st.assign(State_Aeroporto_di_partenza=state_aerop_partenza)
+dataset_1st
 #%%
-print(len(set(aerop_not_matched_stemm_)))
+continents_dataset
+#%%
+continent = {}
+for i in dataset_1st["State_Aeroporto_di_partenza"]:
+    if i in dataset_1st["States"].values:
+        continent[i] = str(dataset_1st["Continent"][dataset_1st["States"] == i]).split()[1]
+    else:
+        continent[i] = i
+
+continente_aerop_partenza = [continent[continente] for continente in dataset_1st["State_Aeroporto_di_partenza"]]
+
+dataset_1st = dataset_1st.assign(Continent_Aeroporto_di_partenza=continente_aerop_partenza)
+
+correct_continent = []
+for i in dataset_1st["Continent_Aeroporto_di_partenza"]:
+    if i == "Mexico":
+        correct_continent.append("America")
+    elif i == "Czech":
+        correct_continent.append("Europe")
+    elif i == "Papua":
+        correct_continent.append("Asia")
+    elif i == "South":
+        correct_continent.append("Asia")
+    elif i == "Israel":
+        correct_continent.append("Asia")
+    elif i == "Serbia":
+        correct_continent.append("Europe")
+    elif i == "Mauritius":
+        correct_continent.append("Africa")
+    elif i == "Moldova":
+        correct_continent.append("Europe")
+    elif i == "Georgia":
+        correct_continent.append("Europe")
+    elif i == "Sri":
+        correct_continent.append("Asia")
+    elif i == "Costa":
+        correct_continent.append("America")
+    elif i == "New":
+        correct_continent.append("Asia")
+    elif i == "Saint":
+        correct_continent.append("America")
+    elif i == "Bonaire":
+        correct_continent.append("America")
+    elif i == "Belarus":
+        correct_continent.append("Europe")
+    elif i == "Cote":
+        correct_continent.append("Africa")
+    elif i == "Saudi":
+        correct_continent.append("Asia")
+    elif i == "Democratic":
+        correct_continent.append("Africa")
+    elif i == "Lithuania":
+        correct_continent.append("Europe")
+    elif i == "Montenegro":
+        correct_continent.append("Africa")
+    elif i == "Haiti":
+        correct_continent.append("America")
+    elif i == "United Arab":
+        correct_continent.append("Asia")
+    elif i == "Slovenia":
+        correct_continent.append("Europe")
+    elif i == "Belize":
+        correct_continent.append("America")
+    elif i == "Brunei":
+        correct_continent.append("Africa")
+    elif i == "Micronesia":
+        correct_continent.append("Oceania")
+    elif i == "Central":
+        correct_continent.append("Africa")
+    elif i == "Burkina":
+        correct_continent.append("Africa")
+    elif i == "Burundi":
+        correct_continent.append("Africa")
+    elif i == "Exercises":
+        correct_continent.append("Sconosciuto")
+    elif i == "Test":
+        correct_continent.append("Sconosciuto")
+    elif i == "Military exercise":
+        correct_continent.append("Sconosciuto")
+    elif i == "Test Flight":
+        correct_continent.append("Sconosciuto")
+    elif i == "Demonstration":
+        correct_continent.append("Sconosciuto")
+    elif i == "Informazione riservata":
+        correct_continent.append("Sconosciuto")
+    elif i == "Mexico City":
+        correct_continent.append("America")
+    elif i == "Antananarivo":
+        correct_continent.append("Africa")
+    elif i == "Hong Kong":
+        correct_continent.append("Asia")
+    elif i == "Milano":
+        correct_continent.append("Europe")
+    elif i == "Mar del Plata":
+        correct_continent.append("America")
+    elif i == "NaN":
+        correct_continent.append("Sconosciuto")
+    elif i == "Juba":
+        correct_continent.append("Africa")
+    elif i == "Miandrivazo":
+        correct_continent.append("Africa")
+    elif i == "Papeete":
+        correct_continent.append("Oceania")
+    elif i == "Niamey":
+        correct_continent.append("Africa")
+    elif i == "Coihaique":
+        correct_continent.append("America")
+    elif i == "Savannakhét":
+            correct_continent.append("Asia")
+    elif i == "Kiev":
+        correct_continent.append("Europe")
+    elif i == "Francistown":
+        correct_continent.append("Africa")
+    elif i == "Iwakuni":
+            correct_continent.append("Asia")
+    elif i == "Malakal":
+        correct_continent.append("Africa")
+    elif i == "N'Djamena":
+        correct_continent.append("Africa")
+    elif i == "Ulan Bator":
+            correct_continent.append("Asia")
+    elif i == "Nouakchott":
+        correct_continent.append("Africa")
+    elif i == "Maintirano":
+        correct_continent.append("Africa")
+    elif i == "Pago Pago":
+        correct_continent.append("Oceania")
+    elif i == "Dushanbe":
+        correct_continent.append("Africa")
+    elif i == "Pristina":
+        correct_continent.append("Europe")
+    elif i == "Dakhla":
+        correct_continent.append("Africa")
+    elif i == "Astana":
+        correct_continent.append("Asia")
+    elif i == "Bonaire,":
+        correct_continent.append("America")
+    elif type(i) == float:
+        correct_continent.append("Sconosciuto")
+    elif i == "Bogotá":
+        correct_continent.append("America")
+    elif i == "Test flight":
+            correct_continent.append("America")
+    else:
+        correct_continent.append(i)
+
+dataset_1st = dataset_1st.assign(Continent_Aeroporto_di_partenza=correct_continent)
+dataset_1st["Continent_Aeroporto_di_partenza"].unique()
+#%%
+sub_r = {}
+for i in dataset_1st["State_Aeroporto_di_partenza"]:
+    if i in continents_dataset["name"].values:
+        sub_r[i] = str(continents_dataset["sub-region"][continents_dataset["name"] == i]).split()[1]
+    else:
+        sub_r[i] = i
+
+sub_regione_aerop_partenza = [sub_r[s_r] for s_r in dataset_1st["State_Aeroporto_di_partenza"]]
+
+dataset_1st = dataset_1st.assign(SubRegion_Aeroporto_di_partenza=sub_regione_aerop_partenza)
+#%% md
+##### Ora eliminiamo le vecchie variabili e riosserviamo il dataset prima di procedere
+
+#%%
+dataset_1st.columns
+#%%
+col_trash_2 = ["Aboard", "Aboard Passangers", 'Aboard Crew', 'Fatalities',
+               'Fatalities Passangers', 'Fatalities Crew', 'Ground', "AC Type",
+               "Date", "Location", "Operator","Route","state_location"]
+dataset_def=dataset_1st
+for i in dataset_def.columns:
+    if i in col_trash_2:
+        dataset_def = dataset_def.drop(i, axis=1)
+dataset_def
+
+
+#%% md
+### Nuove rappresentazioni grafiche
+#%%
+dataset_def.keys()
+#%%
+dataset_def.Continent.unique()
+#%%
+from matplotlib.pyplot import figure
+cs = sb.color_palette("tab20")
+#cs =["darkgre
+# y","darkred","green","purple","aqua","blue","yellow","sienna","orangered","deeppink","springgreen","violet", "pink","dodgerblue"]
+dz=dict(dataset_def["Continent"].drop(0).value_counts())
+sb.set_style("whitegrid")
+pie, ax = plt.subplots(figsize=[14,16])
+Labels = [k for k in dz.keys()]
+
+Data   = [float(v) for v in dz.values()]
+figure(dpi=200);
+plt.pie(x = Data, labels=Labels, autopct="%.1f%%", pctdistance=0.8, colors=cs);
+plt.title("Frequency of Continent", fontsize=30);
+#%%
+sb.scatterplot(x=dataset_1st["new_aboard"],y=dataset_1st["new_fatalities"], hue="Continent", data=dataset_1st)
+#%%
+sb.scatterplot(sizes=200,x=dataset_1st["new_aboard"], y=dataset_1st["new_ground"], hue="Continent", style="decadi",data=dataset_1st)
+#%%
+sb.scatterplot(sizes=200,x=dataset_1st["new_aboard"], y=dataset_1st["new_fatalities_passangers"], hue="Continent", style="decadi",data=dataset_1st)
 #%% md
 # Grafi (Gabro)
 #%%
@@ -1208,7 +1270,7 @@ import networkx as nx
 #%%
 nodes = nx.Graph()
 #%%
-nodes.add_nodes_from(dataset["Aeroporto_di_partenza"])
+nodes.add_nodes_from(dataset_def["Aeroporto_di_partenza"])
 #%%
 nx.draw(nodes)
 #%%
@@ -1254,7 +1316,7 @@ for aer in dataset_def["Aeroporto_5"].unique():
 for aer in dataset_def["Aeroporto_6"].unique():
     if aer not in univ_aerop and type(aer) != float: univ_aerop.append(aer)
 
-for aer in dataset_def["Aeroporto_di_destinazione"].unique():
+for aer in dataset_def["ultimo_aeroporto"].unique():
     if aer not in univ_aerop and type(aer) != float: univ_aerop.append(aer)
 print(len(univ_aerop))
 #%% md
@@ -1270,8 +1332,8 @@ for aeroport in univ_aerop:
                 mini_edge = sorted([aeroport, aeroporto_2[position]])
                 if aeroporto_2[position] != "Nan" and mini_edge not in edges:
                     edges.append(mini_edge)
-                elif aeroporto_2[position] == "Nan" and aeroporto_di_destinazione[position] != "Nan":
-                    mini_edge = sorted([aeroport, aeroporto_di_destinazione[position]])
+                elif aeroporto_2[position] == "Nan" and ultimo_aeroporto[position] != "Nan":
+                    mini_edge = sorted([aeroport, ultimo_aeroporto[position]])
                     if mini_edge not in edges:
                         edges.append(mini_edge)
 
@@ -1281,8 +1343,8 @@ for aeroport in univ_aerop:
                 mini_edge = sorted([aeroport, aeroporto_3[position]])
                 if aeroporto_3[position] != "Nan" and mini_edge not in edges:
                     edges.append(mini_edge)
-                elif aeroporto_3[position] == "Nan" and aeroporto_di_destinazione[position] != "Nan":
-                    mini_edge = sorted([aeroport, aeroporto_di_destinazione[position]])
+                elif aeroporto_3[position] == "Nan" and ultimo_aeroporto[position] != "Nan":
+                    mini_edge = sorted([aeroport, ultimo_aeroporto[position]])
                     if mini_edge not in edges:
                         edges.append(mini_edge)
 
@@ -1292,8 +1354,8 @@ for aeroport in univ_aerop:
                 mini_edge = sorted([aeroport, aeroporto_4[position]])
                 if aeroporto_4[position] != "Nan" and mini_edge not in edges:
                     edges.append(mini_edge)
-                elif aeroporto_4[position] == "Nan" and aeroporto_di_destinazione[position] != "Nan":
-                    mini_edge = sorted([aeroport, aeroporto_di_destinazione[position]])
+                elif aeroporto_4[position] == "Nan" and ultimo_aeroporto[position] != "Nan":
+                    mini_edge = sorted([aeroport, ultimo_aeroporto[position]])
                     if mini_edge not in edges:
                         edges.append(mini_edge)
 
@@ -1303,8 +1365,8 @@ for aeroport in univ_aerop:
                 mini_edge = sorted([aeroport, aeroporto_5[position]])
                 if aeroporto_5[position] != "Nan" and mini_edge not in edges:
                     edges.append(mini_edge)
-                elif aeroporto_5[position] == "Nan" and aeroporto_di_destinazione[position] != "Nan":
-                    mini_edge = sorted([aeroport, aeroporto_di_destinazione[position]])
+                elif aeroporto_5[position] == "Nan" and ultimo_aeroporto[position] != "Nan":
+                    mini_edge = sorted([aeroport, ultimo_aeroporto[position]])
                     if mini_edge not in edges:
                         edges.append(mini_edge)
 
@@ -1314,26 +1376,26 @@ for aeroport in univ_aerop:
                 mini_edge = sorted([aeroport, aeroporto_6[position]])
                 if aeroporto_6[position] != "Nan" and mini_edge not in edges:
                     edges.append(mini_edge)
-                elif aeroporto_6[position] == "Nan" and aeroporto_di_destinazione[position] != "Nan":
-                    mini_edge = sorted([aeroport, aeroporto_di_destinazione[position]])
+                elif aeroporto_6[position] == "Nan" and ultimo_aeroporto[position] != "Nan":
+                    mini_edge = sorted([aeroport, ultimo_aeroporto[position]])
                     if mini_edge not in edges:
                         edges.append(mini_edge)
 
     elif aeroport in aeroporto_6:
         for position, i in enumerate(aeroporto_6):
             if i == aeroport:
-                mini_edge = sorted([aeroport, aeroporto_di_destinazione[position]])
-                if aeroporto_di_destinazione[position] != "Nan" and mini_edge not in edges:
+                mini_edge = sorted([aeroport, ultimo_aeroporto[position]])
+                if ultimo_aeroporto[position] != "Nan" and mini_edge not in edges:
                     edges.append(mini_edge)
-                elif aeroporto_di_destinazione[position] == "Nan" and aeroporto_di_destinazione[position] != "Nan":
-                    mini_edge = sorted([aeroport, aeroporto_di_destinazione[position]])
+                elif ultimo_aeroporto[position] == "Nan" and ultimo_aeroporto[position] != "Nan":
+                    mini_edge = sorted([aeroport, ultimo_aeroporto[position]])
                     if mini_edge not in edges:
                         edges.append(mini_edge)
 
-    elif aeroport in aeroporto_di_destinazione:
-        for position, i in enumerate(aeroporto_di_destinazione):
+    elif aeroport in ultimo_aeroporto:
+        for position, i in enumerate(ultimo_aeroporto):
             if i == aeroport:
-                mini_edge = sorted([aeroport, aeroporto_di_destinazione[position]])
+                mini_edge = sorted([aeroport, ultimo_aeroporto[position]])
                 if aeroporto_6[position] != "Nan":
                     edges.append(mini_edge)
                 elif aeroporto_5[position] != "Nan":
@@ -1420,7 +1482,6 @@ for i in deg:
 #
 new_node_degree = [int(v) for v in new_node_degree.values()]
 
-
 # LAYOUT
 pos_norm = nx.kamada_kawai_layout(new_graph)
 
@@ -1438,24 +1499,265 @@ for node in new_graph.nodes():
 nx.draw_networkx_labels(new_graph, pos_norm, labels, font_size=10)
 plt.show()
 #%%
-new_graph = nx.from_pandas_edgelist(dataset_def, "AC_Type_simplified", "Sub_Regions", edge_attr='Sub_Regions',
+new_graph = nx.from_pandas_edgelist(dataset_def, "State_Aeroporto_di_partenza", "New_Operator_column",
+                                    edge_attr="State_Aeroporto_di_partenza",
                                     create_using=nx.MultiGraph)
 
 figure(figsize=(15, 10), dpi=80)
 
-# node_size = []
-# for i in new_graph.degree:
-#     node_size.append(dataset_def["new_fat"][dataset_def["Sub_Regions"] == i[0]])
-#
-# print(node_size)
+# DEGREE DEI NODI ORIGINARIO
+deg = [name[0] for name in new_graph.degree]
 
-# node_size = [v[1] for v in new_graph.degree]
-nx.draw(new_graph, with_labels=False,
-        node_size=dataset_def["new_fat"].values.tolist(), edge_color="yellow",
-        node_color="orange")
+# MODIFICA DEGREE
+new_node_degree = defaultdict(int)
+
+for position, n in enumerate(dataset_def["State_Aeroporto_di_partenza"]):
+    new_node_degree[n] += 0.05 * dataset_def["new_fat"].iloc[position]
+
+# SE NON VOGLIAMO METTERE IL PESO A TUTTI I NODI
+for i in deg:
+    if not i in new_node_degree:
+        new_node_degree[i] = 0
 #
+new_node_degree = [int(v) for v in new_node_degree.values()]
+
+# LAYOUT
+pos_norm = nx.kamada_kawai_layout(new_graph)
+
+# CREAZIONE GRAFO
+figure(figsize=(20, 15), dpi=80)
+nx.draw(new_graph, with_labels=True, node_size=new_node_degree, edge_color="yellow",
+        node_color="orange", pos=pos_norm)
+#%%
+only_poland = dataset_def[dataset_def["State_Aeroporto_di_partenza"] == "Germany"]
+
+new_graph = nx.from_pandas_edgelist(only_poland, "State_Aeroporto_di_partenza", "States",
+                                    edge_attr="New_Operator_column",
+                                    create_using=nx.MultiGraph)
+
+figure(figsize=(15, 10), dpi=80)
+
+# DEGREE DEI NODI ORIGINARIO
+deg = [name[0] for name in new_graph.degree]
+
+# MODIFICA DEGREE
+new_node_degree = defaultdict(int)
+
+for position, n in enumerate(dataset_def["State_Aeroporto_di_partenza"]):
+    new_node_degree[n] += 0.05 * dataset_def["new_fat"].iloc[position]
+
+# SE NON VOGLIAMO METTERE IL PESO A TUTTI I NODI
+for i in deg:
+    if not i in new_node_degree:
+        new_node_degree[i] = 0
 #
+new_node_degree = [int(v) for v in new_node_degree.values()]
+
+# LAYOUT
+pos_norm = nx.kamada_kawai_layout(new_graph)
+
+# CREAZIONE GRAFO
+figure(figsize=(20, 15), dpi=80)
+nx.draw(new_graph, with_labels=True, edge_color="yellow",
+        node_color="orange", pos=pos_norm)
+#%%
+only_military = dataset_def[dataset_def["New_Operator_column"] == "Military flight"]
+
+new_graph = nx.from_pandas_edgelist(only_military, "Continent_Aeroporto_di_partenza", "States",
+                                    edge_attr="New_Operator_column",
+                                    create_using=nx.MultiGraph)
+
+figure(figsize=(15, 10), dpi=80)
+
+# DEGREE DEI NODI ORIGINARIO
+deg = [name[0] for name in new_graph.degree]
+
+# MODIFICA DEGREE
+new_node_degree = defaultdict(int)
+
+for position, n in enumerate(only_military["Continent_Aeroporto_di_partenza"]):
+    new_node_degree[n] += 0.05 * only_military["new_fat"].iloc[position]
+
+# SE NON VOGLIAMO METTERE IL PESO A TUTTI I NODI
+for i in deg:
+    if not i in new_node_degree:
+        new_node_degree[i] = 0
+#
+new_node_degree = [int(v) for v in new_node_degree.values()]
+
+# LAYOUT
+pos_norm = nx.kamada_kawai_layout(new_graph)
+
+# CREAZIONE GRAFO
+figure(figsize=(20, 15), dpi=80)
+nx.draw(new_graph, with_labels=False, edge_color="yellow", node_size=new_node_degree,
+        node_color="orange", pos=pos_norm)
+
+# SELEZIONE LABELS DA MOSTRARE
+labels = {}
+for node in new_graph.nodes():
+    if node in only_military[
+        "Continent_Aeroporto_di_partenza"].unique():  # indicare la colonna da utilizzare per i labels
+        labels[node] = node
+
+nx.draw_networkx_labels(new_graph, pos_norm, labels, font_size=10)
+plt.show()
+#%% md
+c'è qualcosa che non va...
+#%%
+anni_00_40 = dataset_def[dataset_def["Year"] <= 1940]
+
+new_graph = nx.from_pandas_edgelist(anni_00_40, "New_Operator_column", "State_Aeroporto_di_partenza",
+                                    edge_attr="New_Operator_column",
+                                    create_using=nx.MultiGraph)
+
+figure(figsize=(15, 10), dpi=80)
+
+# DEGREE DEI NODI ORIGINARIO
+deg = [name[0] for name in new_graph.degree]
+
+# MODIFICA DEGREE
+new_node_degree = defaultdict(int)
+
+for position, n in enumerate(anni_00_40["New_Operator_column"]):
+    new_node_degree[n] += anni_00_40["new_fat"].iloc[position]
+
+# SE NON VOGLIAMO METTERE IL PESO A TUTTI I NODI
+for i in deg:
+    if not i in new_node_degree:
+        new_node_degree[i] = 0
+#
+new_node_degree = [int(v) for v in new_node_degree.values()]
+
+# LAYOUT
+pos_norm = nx.kamada_kawai_layout(new_graph)
+
+# CREAZIONE GRAFO
+figure(figsize=(20, 15), dpi=80)
+nx.draw(new_graph, with_labels=True, edge_color="yellow", node_size=new_node_degree,
+        node_color="orange", pos=pos_norm)
+
+# SELEZIONE LABELS DA MOSTRARE
+# labels = {}
+# for node in new_graph.nodes():
+#     if node in anni_00_40["New_Operator_column"].unique():  # indicare la colonna da utilizzare per i labels
+#         labels[node] = node
+#
+# nx.draw_networkx_labels(new_graph, pos_norm, labels, font_size=10)
+# plt.show()
+#%%
+anni_00_40 = dataset_def[dataset_def["Year"] <= 1940]
+anni_00_40 = anni_00_40[anni_00_40["State_Aeroporto_di_partenza"] == "Papua"]
+anni_00_40
+
+
+# new_graph = nx.from_pandas_edgelist(anni_00_40, "Operator", "State_Aeroporto_di_partenza",
+#                                     edge_attr="Operator",
+#                                     create_using=nx.MultiGraph)
+#
+# figure(figsize=(15, 10), dpi=80)
+#
+# # DEGREE DEI NODI ORIGINARIO
+# deg = [name[0] for name in new_graph.degree]
+#
+# # MODIFICA DEGREE
+# new_node_degree = defaultdict(int)
+#
+# for position, n in enumerate(anni_00_40["Operator"]):
+#     new_node_degree[n] += anni_00_40["new_fat"].iloc[position]
+#
+# # SE NON VOGLIAMO METTERE IL PESO A TUTTI I NODI
+# for i in deg:
+#     if not i in new_node_degree:
+#         new_node_degree[i] = 0
+# #
+# new_node_degree = [int(v) for v in new_node_degree.values()]
+#
+# # LAYOUT
 # pos_norm = nx.kamada_kawai_layout(new_graph)
 #
-# node_labels = nx.draw_networkx_labels(new_graph, pos_norm, labels=dataset_def["Sub_Regions"].unique(), font_size=10, font_color='k')
+# # CREAZIONE GRAFO
+# figure(figsize=(20, 15), dpi=80)
+# nx.draw(new_graph, with_labels=True, edge_color="yellow", node_size=new_node_degree,
+#         node_color="orange", pos=pos_norm)
+#
+# SELEZIONE LABELS DA MOSTRARE
+# labels = {}
+# for node in new_graph.nodes():
+#     if node in anni_00_40["New_Operator_column"].unique():  # indicare la colonna da utilizzare per i labels
+#         labels[node] = node
+#
+# nx.draw_networkx_labels(new_graph, pos_norm, labels, font_size=10)
+# plt.show()
 #%%
+anni_40_80 = dataset_def[dataset_def["Year"] >= 1940]
+anni_40_80 = anni_40_80[anni_40_80["Year"] <= 1980]
+
+new_graph = nx.from_pandas_edgelist(anni_40_80, "New_Operator_column", "State_Aeroporto_di_partenza",
+                                    edge_attr="New_Operator_column",
+                                    create_using=nx.MultiGraph)
+
+figure(figsize=(15, 10), dpi=80)
+
+# DEGREE DEI NODI ORIGINARIO
+deg = [name[0] for name in new_graph.degree]
+
+# MODIFICA DEGREE
+new_node_degree = defaultdict(int)
+
+for position, n in enumerate(anni_40_80["New_Operator_column"]):
+    new_node_degree[n] += anni_40_80["new_fat"].iloc[position]
+
+# SE NON VOGLIAMO METTERE IL PESO A TUTTI I NODI
+for i in deg:
+    if not i in new_node_degree:
+        new_node_degree[i] = 0
+#
+new_node_degree = [int(v) for v in new_node_degree.values()]
+
+# LAYOUT
+pos_norm = nx.kamada_kawai_layout(new_graph)
+
+# CREAZIONE GRAFO
+figure(figsize=(20, 15), dpi=80)
+nx.draw(new_graph, with_labels=True, edge_color="yellow", node_size=new_node_degree,
+        node_color="orange", pos=pos_norm)
+
+# SELEZIONE LABELS DA MOSTRARE
+# labels = {}
+# for node in new_graph.nodes():
+#     if node in anni_00_40["New_Operator_column"].unique():  # indicare la colonna da utilizzare per i labels
+#         labels[node] = node
+#
+# nx.draw_networkx_labels(new_graph, pos_norm, labels, font_size=10)
+# plt.show()
+#%%
+new_graph = nx.from_pandas_edgelist(dataset_def, "Continent_Aeroporto_di_partenza", "Continent_Aeroporto_di_partenza",
+                                    edge_attr="Continent_Aeroporto_di_partenza",
+                                    create_using=nx.MultiGraph)
+
+figure(figsize=(15, 10), dpi=80)
+
+# DEGREE DEI NODI ORIGINARIO
+deg = [name[0] for name in new_graph.degree]
+
+# MODIFICA DEGREE
+new_node_degree = defaultdict(int)
+
+for position, n in enumerate(dataset_def["Continent_Aeroporto_di_partenza"]):
+    new_node_degree[n] += 0.05 * dataset_def["new_fat"].iloc[position]
+
+# SE NON VOGLIAMO METTERE IL PESO A TUTTI I NODI
+for i in deg:
+    if not i in new_node_degree:
+        new_node_degree[i] = 0
+#
+new_node_degree = [int(v) for v in new_node_degree.values()]
+
+# LAYOUT
+pos_norm = nx.kamada_kawai_layout(new_graph)
+
+# CREAZIONE GRAFO
+figure(figsize=(20, 15), dpi=80)
+nx.draw(new_graph, with_labels=True, node_size=new_node_degree, edge_color="yellow",
+        node_color="orange", pos=pos_norm)
